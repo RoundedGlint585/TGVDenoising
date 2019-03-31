@@ -2,10 +2,10 @@
 // Created by roundedglint585 on 3/19/19.
 //
 #define STB_IMAGE_IMPLEMENTATION
+#define STB_IMAGE_WRITE_IMPLEMENTATION
 
 #include <gtest/gtest.h>
 #include "../src/MathRoutine.hpp"
-#include "../third-party/stb_image.h"
 
 TEST(imageTest, readImageFromFile) {
     int width, height, channels;
@@ -15,15 +15,21 @@ TEST(imageTest, readImageFromFile) {
                                      &channels,
                                      STBI_grey);
     ASSERT_FALSE(image == nullptr) << "Image is not loaded";
+
     mathRoutine::Image imageInMatrix = mathRoutine::createImageFromUnsignedCharArray(image, width, height);
     std::size_t returnedWidth, returnedHeight;
-    float *result = mathRoutine::getArrayFromImage(&returnedWidth, &returnedHeight, imageInMatrix);
+    unsigned char *result = mathRoutine::getArrayFromImage(&returnedWidth, &returnedHeight, imageInMatrix);
     ASSERT_EQ(width, returnedWidth);
+    ASSERT_EQ(height, returnedHeight);
+    for (size_t i = 0; i < height * width; i++) {
+        ASSERT_EQ(result[i], image[i]);
+    }
+
     stbi_image_free(image);
     delete[] result;
 }
 
-TEST(imageTest, calculateGradient) {
+TEST(imageTest, writeAndLoad) {
     int width, height, channels;
     unsigned char *image = stbi_load("tests/result.png",
                                      &width,
@@ -32,6 +38,28 @@ TEST(imageTest, calculateGradient) {
                                      STBI_grey);
     ASSERT_FALSE(image == nullptr) << "Image is not loaded";
     mathRoutine::Image imageInMatrix = mathRoutine::createImageFromUnsignedCharArray(image, width, height);
+    std::size_t returnedWidth, returnedHeight;
+    unsigned char *result = mathRoutine::getArrayFromImage(&returnedWidth, &returnedHeight, imageInMatrix);
+    stbi_write_png("result1.png", returnedWidth, returnedHeight, STBI_grey, image, returnedWidth);
+    unsigned char *imageLoadedAgain = stbi_load("result1.png",
+                                                &width,
+                                                &height,
+                                                &channels,
+                                                STBI_grey);
+    ASSERT_FALSE(imageLoadedAgain == nullptr) << "Loaded again image is not loaded";
+    for (size_t i = 0; i < width * height; i++) {
+        ASSERT_EQ(result[i], image[i]);
+    }
+
+
+}
+
+TEST(imageTest, calculateGradient) {
+    mathRoutine::Image imageInMatrix = {{1,  1,   1,   1,   1},
+                                        {1,  16,  1,   1,   1},
+                                        {16, 1,   1,   196, 1},
+                                        {1,  1,   1,   200, 1},
+                                        {1,  196, 200, 3,   1}};
     mathRoutine::Gradient gradient = mathRoutine::calculateGradient(imageInMatrix);
     mathRoutine::Gradient correct = {{{0.f,   0},     {0,     15.f},  {0,      0},     {0,      0},      {0, 0}},
                                      {{15.f,  15.f},  {-15.f, -15.f}, {0,      0},     {0,      195.f},  {0, 0}},
@@ -42,14 +70,11 @@ TEST(imageTest, calculateGradient) {
 }
 
 TEST(imageTest, calculateEpsilon) {
-    int width, height, channels;
-    unsigned char *image = stbi_load("tests/result.png",
-                                     &width,
-                                     &height,
-                                     &channels,
-                                     STBI_grey);
-    ASSERT_FALSE(image == nullptr) << "Image is not loaded";
-    mathRoutine::Image imageInMatrix = mathRoutine::createImageFromUnsignedCharArray(image, width, height);
+    mathRoutine::Image imageInMatrix = {{1,  1,   1,   1,   1},
+                                        {1,  16,  1,   1,   1},
+                                        {16, 1,   1,   196, 1},
+                                        {1,  1,   1,   200, 1},
+                                        {1,  196, 200, 3,   1}};
     mathRoutine::Gradient gradient = mathRoutine::calculateGradient(imageInMatrix);
     mathRoutine::Epsilon epsilon = mathRoutine::calculateEpsilon(gradient);
     mathRoutine::Epsilon correctEpsilon = {{{0,      15.f,  15.f,  15.f},  {0,      -15.f, -15.f, -30.f},  {0,      0,      0,      0},      {0,     0,      0,      195.f},  {0, 0, 0, 0}},
@@ -61,14 +86,11 @@ TEST(imageTest, calculateEpsilon) {
 }
 
 TEST(imageTest, calculateTranspondedGradient) {
-    int width, height, channels;
-    unsigned char *image = stbi_load("tests/result.png",
-                                     &width,
-                                     &height,
-                                     &channels,
-                                     STBI_grey);
-    ASSERT_FALSE(image == nullptr) << "Image is not loaded";
-    mathRoutine::Image imageInMatrix = mathRoutine::createImageFromUnsignedCharArray(image, width, height);
+    mathRoutine::Image imageInMatrix = {{1,  1,   1,   1,   1},
+                                        {1,  16,  1,   1,   1},
+                                        {16, 1,   1,   196, 1},
+                                        {1,  1,   1,   200, 1},
+                                        {1,  196, 200, 3,   1}};
     mathRoutine::Gradient gradient = mathRoutine::calculateGradient(imageInMatrix);
     mathRoutine::Image transpondedGradient = mathRoutine::calculateTranspondedGradient(gradient);
     mathRoutine::Image correctTransponded = {{0,      -15.f,  0,      0,      0},
@@ -80,14 +102,11 @@ TEST(imageTest, calculateTranspondedGradient) {
 }
 
 TEST(imageTest, calculateTranspondedEpsilon) {
-    int width, height, channels;
-    unsigned char *image = stbi_load("tests/result.png",
-                                     &width,
-                                     &height,
-                                     &channels,
-                                     STBI_grey);
-    ASSERT_FALSE(image == nullptr) << "Image is not loaded";
-    mathRoutine::Image imageInMatrix = mathRoutine::createImageFromUnsignedCharArray(image, width, height);
+    mathRoutine::Image imageInMatrix = {{1,  1,   1,   1,   1},
+                                        {1,  16,  1,   1,   1},
+                                        {16, 1,   1,   196, 1},
+                                        {1,  1,   1,   200, 1},
+                                        {1,  196, 200, 3,   1}};
     mathRoutine::Gradient gradient = mathRoutine::calculateGradient(imageInMatrix);
     mathRoutine::Epsilon epsilon = mathRoutine::calculateEpsilon(gradient);
     mathRoutine::Gradient transpondedEpsilon = mathRoutine::calculateTranspondedEpsilon(epsilon);
@@ -100,14 +119,11 @@ TEST(imageTest, calculateTranspondedEpsilon) {
 }
 
 TEST(imageTest, calculateAnorm) {
-    int width, height, channels;
-    unsigned char *image = stbi_load("tests/result.png",
-                                     &width,
-                                     &height,
-                                     &channels,
-                                     STBI_grey);
-    ASSERT_FALSE(image == nullptr) << "Image is not loaded";
-    mathRoutine::Image imageInMatrix = mathRoutine::createImageFromUnsignedCharArray(image, width, height);
+    mathRoutine::Image imageInMatrix = {{1,  1,   1,   1,   1},
+                                        {1,  16,  1,   1,   1},
+                                        {16, 1,   1,   196, 1},
+                                        {1,  1,   1,   200, 1},
+                                        {1,  196, 200, 3,   1}};
     mathRoutine::Gradient gradient = mathRoutine::calculateGradient(imageInMatrix);
     mathRoutine::Epsilon epsilon = mathRoutine::calculateEpsilon(gradient);
     mathRoutine::Image normalizedGradient = mathRoutine::anorm(gradient);
@@ -135,14 +151,11 @@ TEST(imageTest, calculateAnorm) {
 }
 
 TEST(imageTest, projectOfMatrixTest) {
-    int width, height, channels;
-    unsigned char *image = stbi_load("tests/result.png",
-                                     &width,
-                                     &height,
-                                     &channels,
-                                     STBI_grey);
-    ASSERT_FALSE(image == nullptr) << "Image is not loaded";
-    mathRoutine::Image imageInMatrix = mathRoutine::createImageFromUnsignedCharArray(image, width, height);
+    mathRoutine::Image imageInMatrix = {{1,  1,   1,   1,   1},
+                                        {1,  16,  1,   1,   1},
+                                        {16, 1,   1,   196, 1},
+                                        {1,  1,   1,   200, 1},
+                                        {1,  196, 200, 3,   1}};
     mathRoutine::Gradient gradient = mathRoutine::calculateGradient(imageInMatrix);
     mathRoutine::Epsilon epsilon = mathRoutine::calculateEpsilon(gradient);
     mathRoutine::Gradient projectedGradient = mathRoutine::project(gradient, 2);
@@ -159,7 +172,16 @@ TEST(imageTest, projectOfMatrixTest) {
     }
 }
 
-TEST(imageTest, sumOfImages){
-    mathRoutine::Image first ={{1,2,4},{0,0,0},{2,6,1}};
-    mathRoutine::Image second ={{5,-2,1},{0,-4,0},{0,1,1}};
+TEST(imageTest, sumOfImages) {
+    using namespace mathRoutine;
+    mathRoutine::Image first = {{1, 2, 4},
+                                {0, 0, 0},
+                                {2, 6, 1}};
+    mathRoutine::Image second = {{5, -2, 1},
+                                 {0, -4, 0},
+                                 {0, 1,  1}};
+    mathRoutine::Image result = {{6, 0,  5},
+                                 {0, -4, 0},
+                                 {2, 7,  2}};
+    ASSERT_EQ(result, first+second) << "sum of matrix is not equal";
 }

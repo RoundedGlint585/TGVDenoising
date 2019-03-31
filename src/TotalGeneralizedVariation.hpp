@@ -24,8 +24,9 @@ public:
 
     explicit TotalGeneralizedVariation(std::vector<Image> &&);
 
+    Image solve(float tau, float lambda_tv, float lambda_tgv, float lambda_data, size_t iterations = 1000);
 
-public:
+private:
     //math routine
 
     void calculateGradient();
@@ -43,10 +44,8 @@ public:
     void calculateHist();
 
 
-    Image prox(const Image &image, float tau, float lambda_data) const;
+    Image prox(const Image &image, float tau, float lambda_data);
 
-    //
-    Image solve(float tau, float lambda_tv, float lambda_tgv, float lambda_data, size_t iterations = 1000);
 
     void tgvIteration(Image &u, Gradient &v, Gradient &p, Epsilon q, float tau, float lambda_tv, float lambda_tgv,
                       float lambda_data);
@@ -56,8 +55,11 @@ public:
 
     void initWs();
 
+    void initStacked();
+
     std::vector<Image> m_images;
     std::vector<Image> Ws; //histogram fot images
+    std::vector<std::vector<std::vector<float>>> stacked;
     Image m_result;
     size_t m_width;
     size_t m_height;

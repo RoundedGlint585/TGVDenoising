@@ -9,6 +9,8 @@
 #include <array>
 #include <cmath>
 #include <iostream>
+#include <stb_image.h>
+#include <stb_image_write.h>
 
 namespace mathRoutine {
     constexpr float eps = 0.001;
@@ -16,9 +18,11 @@ namespace mathRoutine {
     using Gradient = std::vector<std::vector<std::array<float, 2>>>;
     using Epsilon = std::vector<std::vector<std::array<float, 4>>>;
 
-    static Image createImageFromUnsignedCharArray(unsigned char *image, size_t width, size_t height);
+    static Image createImageFromUnsignedCharArray(const unsigned char *image, size_t width, size_t height);
 
-    static void getImageFromImage(unsigned char *result, size_t &width, size_t &height, const Image &image);
+    static unsigned char *getArrayFromImage(std::size_t *width, std::size_t *height, const Image &image);
+
+    static void writeImage(mathRoutine::Image result, std::string name);
 
     static Gradient calculateGradient(const Image &image);
 
@@ -62,23 +66,29 @@ namespace mathRoutine {
     template<typename Matrix>
     static Matrix operator*(float r, const Matrix &matrix1);
 
+    void writeImage(mathRoutine::Image result, std::string name) {
+        size_t width, height;
+        unsigned char *image = mathRoutine::getArrayFromImage(&width, &height, result);
+        stbi_write_png(name.c_str(), result[0].size(), result.size(), 1, image, 1 * result.size());
+    }
+
     static Image createImageFromUnsignedCharArray(const unsigned char *image, size_t width, size_t height) {
         Image result(height, std::vector<float>(width, 0));
         for (size_t i = 0; i < height; i++) {
             for (size_t j = 0; j < width; j++) {
-                result[i][j] = image[i + j * i];
+                result[i][j] = (float) image[j + width * i];
             }
         }
         return result;
     }
 
-    static float *getArrayFromImage(std::size_t *width, std::size_t *height, const Image &image) {
-        float *result = new float[image.size() * image[0].size()];
+    static unsigned char *getArrayFromImage(std::size_t *width, std::size_t *height, const Image &image) {
+        unsigned char *result = new unsigned char[image.size() * image[0].size()];
         *height = image.size();
         *width = image[0].size();
-        for (size_t i = 0; i < *height; i++) {
-            for (size_t j = 0; j < *width; j++) {
-                result[i + j * i] = image[i][j];
+        for (size_t i = 0; i < image.size(); i++) {
+            for (size_t j = 0; j < image[0].size(); j++) {
+                result[j + image[0].size() * i] = (unsigned char) image[i][j];
             }
         }
         return result;
