@@ -3,7 +3,7 @@
 //
 
 #include "TotalGeneralizedVariation.hpp"
-#include <algorithm>
+
 
 TotalGeneralizedVariation::TotalGeneralizedVariation(const std::vector<TotalGeneralizedVariation::Image> &images)
         : m_images(images), m_result(m_images[0]), m_width(m_result[0].size()), m_height(m_result.size()) {
@@ -47,21 +47,6 @@ void TotalGeneralizedVariation::initStacked() {
                           std::vector<std::vector<float>>(m_width, std::vector<float>(Ws.size() + m_images.size(), 0)));
 }
 
-void TotalGeneralizedVariation::calculateGradient() {
-    m_gradient = mathRoutine::calculateGradient(m_result);
-}
-
-void TotalGeneralizedVariation::calculateEpsilon() {
-    m_epsilon = mathRoutine::calculateEpsilon(m_gradient);
-}
-
-void TotalGeneralizedVariation::calculateTranspondedGradient() {
-    m_transpondedGradient = mathRoutine::calculateTranspondedGradient(m_gradient);
-}
-
-void TotalGeneralizedVariation::calculateTranspondedEpsilon() {
-    m_transpondedEpsilon = mathRoutine::calculateTranspondedEpsilon(m_epsilon);
-}
 
 void TotalGeneralizedVariation::calculateHist() {
     for (size_t histNum = 0; histNum < Ws.size(); histNum++) {
@@ -112,14 +97,10 @@ TotalGeneralizedVariation::prox(const TotalGeneralizedVariation::Image &image, f
 
 TotalGeneralizedVariation::Image
 TotalGeneralizedVariation::solve(float tau, float lambda_tv, float lambda_tgv, float lambda_data, size_t iterations) {
-    calculateGradient();
-    calculateEpsilon();
-    calculateTranspondedGradient();
-    calculateTranspondedEpsilon();
     calculateHist();
     Image u = m_result;
-    Gradient v = m_gradient;
-    Gradient p = m_gradient;
+    Gradient v = mathRoutine::calculateGradient(m_result);
+    Gradient p = mathRoutine::calculateGradient(m_result);
     Epsilon q = mathRoutine::calculateEpsilon(v);
     for (size_t i = 0; i < iterations; i++) {
         std::cout << "Iteration #: " << i << std::endl;
@@ -140,7 +121,8 @@ void TotalGeneralizedVariation::tgvIteration(Image &u, Gradient &v, Gradient &p,
     Image un = prox(u + (-tau_u) * lambda_tv * (mathRoutine::calculateTranspondedGradient(p)), tau_u, lambda_data);
     Gradient vn = v + tau_v * (lambda_tgv * ((-1) * (mathRoutine::calculateTranspondedEpsilon(q))) + lambda_tv * p);
     Gradient pn = project(
-            p + tau_p * (lambda_tv * (mathRoutine::calculateGradient((2 * un) + ((-1) * u)) + (-1) * ((2 * vn) + ((-1) * v)))),
+            p + tau_p *
+                (lambda_tv * (mathRoutine::calculateGradient((2 * un) + ((-1) * u)) + (-1) * ((2 * vn) + ((-1) * v)))),
             lambda_tv);
     Epsilon qn = project(q + tau_q * lambda_tgv * mathRoutine::calculateEpsilon(2 * vn + ((-1) * v)), lambda_tgv);
 

@@ -1,30 +1,48 @@
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
+
 #include <iostream>
-#include "src/MathRoutine.hpp"
+#include <filesystem>
+
+#define CPU
+
+
+#ifdef CPU
 #include "src/TotalGeneralizedVariation.hpp"
-std::vector<mathRoutine::Image> prepareImages(size_t amount) {
+#else
+
+#include "src/GPUBasedTotalGeneralizedVariation.hpp"
+
+#endif
+
+
+
+
+
+#ifdef CPU
+
+std::vector<mathRoutine::Image> prepareImages(std::string_view path) {
     std::vector<mathRoutine::Image> result;
-    for (size_t i = 0; i < amount; i++) {
+
+    using namespace std::filesystem;
+    for (auto &p: directory_iterator(path)) {
+        std::cout << "loading image: " << p << std::endl;
+        std::string name = p.path();
         int width, height, channels;
-        std::string name("data/house_" + std::to_string(i) + ".png");
-        std::cout << "loaded: " << name << std::endl;
         unsigned char *image = stbi_load(name.c_str(),
                                          &width,
                                          &height,
                                          &channels,
                                          STBI_grey);
         mathRoutine::Image imageRes = mathRoutine::createImageFromUnsignedCharArray(image, width, height);
-        result.push_back(imageRes);
+        result.emplace_back(imageRes);
         stbi_image_free(image);
     }
     return result;
 }
 
-
-
-int main() {
-    std::vector<mathRoutine::Image> images = prepareImages(10);
+void checkNonGPU(){
+    std::vector<mathRoutine::Image> images = prepareImages("data");
     TotalGeneralizedVariation variation(std::move(images));
 
     float tau = 1 / (sqrtf(8)) / 4 / 8;
@@ -33,7 +51,22 @@ int main() {
     float lambda_tgv = 1.0;
     lambda_tv /= lambda_data;
     lambda_tgv /= lambda_data;
-    mathRoutine::Image result = variation.solve(tau, lambda_tv, lambda_tgv, lambda_data, 400);
+    mathRoutine::Image result = variation.solve(tau, lambda_tv, lambda_tgv, lambda_data, 10);
     mathRoutine::writeImage(result, "result.png");
+}
+#else
+
+void checkGPU(int argc, char **argv) {
+    auto worker = GPUBasedTGV(argc, argv);
+    worker.init();
+    worker.start(10);
+}
+
+#endif
+
+
+int main(int argc, char **argv) {
+    checkNonGPU();
+    //checkGPU(argc, argv);
     return 0;
 }

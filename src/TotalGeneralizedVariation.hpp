@@ -8,6 +8,7 @@
 #include <vector>
 #include <array>
 #include <cmath>
+#include <algorithm>
 #include "MathRoutine.hpp"
 
 
@@ -29,23 +30,9 @@ public:
 private:
     //math routine
 
-    void calculateGradient();
-
-
-    void calculateEpsilon();
-
-
-    void calculateTranspondedGradient();
-
-
-    void calculateTranspondedEpsilon();
-
-
     void calculateHist();
 
-
     Image prox(const Image &image, float tau, float lambda_data);
-
 
     void tgvIteration(Image &u, Gradient &v, Gradient &p, Epsilon q, float tau, float lambda_tv, float lambda_tgv,
                       float lambda_data);
