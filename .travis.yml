@@ -28,5 +28,5 @@ script:
   - mkdir build
   - cd build
   - cmake ..
-  - cmake --build .
+  - cmake --build -DBUILD_TESTS=ON .
   - ./runUnitTests
