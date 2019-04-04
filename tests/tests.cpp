@@ -9,7 +9,7 @@
 
 TEST(imageTest, readImageFromFile) {
     int width, height, channels;
-    unsigned char *image = stbi_load("tests/result.png",
+    unsigned char *image = stbi_load("../tests/test_1.png",
                                      &width,
                                      &height,
                                      &channels,
@@ -31,7 +31,7 @@ TEST(imageTest, readImageFromFile) {
 
 TEST(imageTest, writeAndLoad) {
     int width, height, channels;
-    unsigned char *image = stbi_load("tests/result.png",
+    unsigned char *image = stbi_load("../tests/test_1.png",
                                      &width,
                                      &height,
                                      &channels,
