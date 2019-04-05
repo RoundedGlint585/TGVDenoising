@@ -1,7 +1,7 @@
 ![Build Status](https://travis-ci.org/DanonOfficial/TGVDenoising.svg?branch=master)
 # TGV Image Denoising
 
-This code repository is an implementation of the total generalized variation method
+This code repository is an implementation of the total generalized variation method based on this [paper](https://pdfs.semanticscholar.org/3cdf/b982d5f5c926f9ee257ee7d391ff716e08e6.pdf?_ga=2.99932824.785502720.1554466187-1112687837.1554466187)
 
 ## Getting Started
 
@@ -18,15 +18,24 @@ These are the base requirements to build
   * Cmake
   * A C++17-standard-compliant compiler
 
+## Installing 
+
+```asm
+  mkdir build
+  cd build
+  cmake -D BUILD_RELEASE:BOOL=true ..
+  cmake --build .
+```
 ## Running the tests
 
-Compile with Cmake flag -DBUILD_TESTS=ON   
+Compile with Cmake flag -D BUILD_RELEASE:BOOL=false
+```
+  mkdir build
+  cd build
+  cmake -D BUILD_RELEASE:BOOL=false ..
+  cmake --build .
+```
 
-
-
-## Contributing
-
-Please read [CONTRIBUTING.md](https://gist.github.com/PurpleBooth/b24679402957c63ec426) for details on our code of conduct, and the process for submitting pull requests to us.
 
 
 ## Authors

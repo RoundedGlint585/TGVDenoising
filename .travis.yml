@@ -27,6 +27,6 @@ script:
   - cd $TRAVIS_BUILD_DIR
   - mkdir build
   - cd build
-  - cmake ..
-  - cmake --build -DBUILD_TESTS=ON .
+  - cmake -D BUILD_RELEASE:BOOL=false ..
+  - cmake --build .
   - ./runUnitTests
