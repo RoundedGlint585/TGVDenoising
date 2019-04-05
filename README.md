@@ -39,8 +39,12 @@ Compile with Cmake flag -D BUILD_RELEASE:BOOL=false
 ## To see results
 
 As far it is not completed work, you can checkout partially result.
-Clone code, build release (mkdir build && cd build && cmake .. && cmake --build .), add folder "data" with photos
-and start it. After 4000 iterations from data/* pictures you will get result.png
+Clone code, build release (mkdir build && cd build && cmake .. && cmake --build .)
+
+Add folder "data" with photos(or use "data" from this repository) and start it  
+Binary should be in the same place with folder "data" . 
+
+After 4000 iterations from data/* pictures you will get result.png
 
 ## Authors
 
