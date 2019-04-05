@@ -41,7 +41,7 @@ std::vector<mathRoutine::Image> prepareImages(std::string_view path) {
     return result;
 }
 
-void checkNonGPU(){
+void checkNonGPU(size_t itearations){
     std::vector<mathRoutine::Image> images = prepareImages("data");
     TotalGeneralizedVariation variation(std::move(images));
 
@@ -51,7 +51,7 @@ void checkNonGPU(){
     float lambda_tgv = 1.0;
     lambda_tv /= lambda_data;
     lambda_tgv /= lambda_data;
-    mathRoutine::Image result = variation.solve(tau, lambda_tv, lambda_tgv, lambda_data, 10);
+    mathRoutine::Image result = variation.solve(tau, lambda_tv, lambda_tgv, lambda_data, itearations);
     mathRoutine::writeImage(result, "result.png");
 }
 #else
@@ -66,7 +66,7 @@ void checkGPU(int argc, char **argv) {
 
 
 int main(int argc, char **argv) {
-    checkNonGPU();
-    //checkGPU(argc, argv);
+    checkNonGPU(4000);
+    //checkGPU(argc, argv); //DOES NOT WORK FOR NOW
     return 0;
 }

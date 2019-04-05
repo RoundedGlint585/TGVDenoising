@@ -23,8 +23,6 @@ void calculateGradient(__global float *image, __global float *v, unsigned int wi
 }
 
 
-
-
 void calculateTranspondedGradient(__global float *gradient, __global float *transpondedGradient, unsigned int width,
                                   unsigned int height) {
     const unsigned int index = get_global_id(0);

@@ -15,9 +15,9 @@ void copyFromTo(__global float *v, __global float *p, unsigned int size, unsigne
 }
 
 __kernel void copy(__global float *from,
-                       __global float *to,
-                       unsigned int width, unsigned int height, unsigned int amount,
-                       unsigned int n) {
+                   __global float *to,
+                   unsigned int width, unsigned int height, unsigned int amount,
+                   unsigned int n) {
     const unsigned int index = get_global_id(0);
     if (index <= n) {
         copyFromTo(from, to, width * height, amount);

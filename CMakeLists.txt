@@ -19,7 +19,7 @@ if(${BUILD_RELEASE})
     convertIntoHeader(src/cl/epsilon.cl src/cl/epsilon.h epsilon_kernel)
     convertIntoHeader(src/cl/copy.cl src/cl/copy.h copy_kernel)
 
-    add_executable(TGV main.cpp  src/TotalGeneralizedVariation.cpp src/TotalGeneralizedVariation.hpp src/MathRoutine.hpp  src/GPUBasedTotalGeneralizedVariation.cpp src/GPUBasedTotalGeneralizedVariation.hpp src/cl/epsilon.h src/cl/gradient.h src/cl/copy.h)
+    add_executable(TGV main.cpp src/TotalGeneralizedVariation.cpp src/TotalGeneralizedVariation.hpp src/MathRoutine.hpp  src/GPUBasedTotalGeneralizedVariation.cpp src/GPUBasedTotalGeneralizedVariation.hpp src/cl/epsilon.h src/cl/gradient.h src/cl/copy.h)
     target_link_libraries(TGV libclew libgpu libutils libstbimages stdc++fs)
 else()
     find_package(GTest REQUIRED)

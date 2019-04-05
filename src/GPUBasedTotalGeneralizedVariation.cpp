@@ -88,8 +88,8 @@ void GPUBasedTGV::start(size_t iterations) {
     unsigned int global_work_size = (memoryBuffers[image].first + workGroupSize - 1) / workGroupSize * workGroupSize;
     std::cout << "Global work size: " << global_work_size << std::endl;
     tgvGradientKernel.exec(gpu::WorkSize(workGroupSize, global_work_size), memoryBuffers[image].second,
-                      memoryBuffers[v].second, (unsigned int)
-                              width, (unsigned int) height, (unsigned int) memoryBuffers[image].first);
+                           memoryBuffers[v].second, (unsigned int)
+                                   width, (unsigned int) height, (unsigned int) memoryBuffers[image].first);
 
 
 }

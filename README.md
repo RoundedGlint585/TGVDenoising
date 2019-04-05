@@ -36,7 +36,11 @@ Compile with Cmake flag -D BUILD_RELEASE:BOOL=false
   cmake --build .
 ```
 
+## To see results
 
+As far it is not completed work, you can checkout partially result.
+Clone code, build release (just  mkdir build && cd build && cmake .. && cmake --build)
+and start it. After 4000 iterations from data/* pictures you will get result.png
 
 ## Authors
 

@@ -28,9 +28,9 @@ void calculateEpsilon(__global float *gradient, __global float *epsilon, unsigne
 }
 
 __kernel void epsilon(__global float *gradient,
-                  __global float *epsilon,
-                  unsigned int width, unsigned int height,
-                  unsigned int n) {
+                      __global float *epsilon,
+                      unsigned int width, unsigned int height,
+                      unsigned int n) {
     const unsigned int index = get_global_id(0);
     if (index <= n) {
         calculateEpsilon(gradient, epsilon, width, height);
