@@ -20,7 +20,7 @@ These are the base requirements to build
 
 ## Installing 
 
-```asm
+```bash
   mkdir build
   cd build
   cmake -D BUILD_RELEASE:BOOL=true ..
@@ -29,7 +29,7 @@ These are the base requirements to build
 ## Running the tests
 
 Compile with Cmake flag -D BUILD_RELEASE:BOOL=false
-```
+```bash
   mkdir build
   cd build
   cmake -D BUILD_RELEASE:BOOL=false ..
