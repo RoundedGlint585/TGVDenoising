@@ -5,13 +5,12 @@
 #endif
 
 #line 6
-
+//layout for epsilon: dx_01...dx_n1 dy_01...dy_n1 dx_02...dx_n2 dy_02...dy_n2
 void calculateEpsilon(__global float *gradient, __global float *epsilon, unsigned int width, unsigned int height) {
     const unsigned int index = get_global_id(0);
 
     unsigned int imageSize = width * height;
     if (index % width == (width - 1)) {
-        printf("%d\n", index);
         epsilon[index] = 0;
         epsilon[index + 2 * imageSize] = 0;
     } else {
@@ -30,7 +29,7 @@ void calculateEpsilon(__global float *gradient, __global float *epsilon, unsigne
 __kernel void epsilon(__global float *gradient,
                       __global float *epsilon,
                       unsigned int width, unsigned int height,
-                      unsigned int n) {
+                      unsigned int n) { //n - sizeof image
     const unsigned int index = get_global_id(0);
     if (index <= n) {
         calculateEpsilon(gradient, epsilon, width, height);

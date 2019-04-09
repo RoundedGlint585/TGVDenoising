@@ -185,3 +185,5 @@ TEST(imageTest, sumOfImages) {
                                  {2, 7,  2}};
     ASSERT_EQ(result, first + second) << "sum of matrix is not equal";
 }
+
+//TODO: Tests for GPU Version

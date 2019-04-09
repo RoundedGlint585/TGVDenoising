@@ -41,7 +41,7 @@ std::vector<mathRoutine::Image> prepareImages(std::string_view path) {
     return result;
 }
 
-void checkNonGPU(size_t itearations){
+void checkNonGPU(size_t iterations){
     std::vector<mathRoutine::Image> images = prepareImages("data");
     TotalGeneralizedVariation variation(std::move(images));
 
@@ -51,22 +51,30 @@ void checkNonGPU(size_t itearations){
     float lambda_tgv = 1.0;
     lambda_tv /= lambda_data;
     lambda_tgv /= lambda_data;
-    mathRoutine::Image result = variation.solve(tau, lambda_tv, lambda_tgv, lambda_data, itearations);
+    mathRoutine::Image result = variation.solve(tau, lambda_tv, lambda_tgv, lambda_data, iterations);
     mathRoutine::writeImage(result, "result.png");
 }
 #else
 
-void checkGPU(int argc, char **argv) {
+void checkGPU(int argc, char **argv, size_t iterations) {
+    float tau = 1 / (sqrtf(8)) / 4 / 8;
+    float lambda_data = 1.0;
+    float lambda_tv = 1.0;
+    float lambda_tgv = 1.0;
+    lambda_tv /= lambda_data;
+    lambda_tgv /= lambda_data;
     auto worker = GPUBasedTGV(argc, argv);
     worker.init();
-    worker.start(10);
+    worker.start(iterations, tau, lambda_tv, lambda_tgv, lambda_data);
+    worker.writeResult("result.png");
 }
 
 #endif
 
 
 int main(int argc, char **argv) {
-    checkNonGPU(4000);
-    //checkGPU(argc, argv); //DOES NOT WORK FOR NOW
+    checkNonGPU(1000);
+    //checkGPU(argc, argv, 2); //DOES NOT WORK FOR NOW
+
     return 0;
 }

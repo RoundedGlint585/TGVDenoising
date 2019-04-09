@@ -14,17 +14,30 @@
 #include "cl/epsilon.h"
 #include "cl/gradient.h"
 #include "cl/copy.h"
+#include "cl/mulMatrixOnConstant.h"
+#include "cl/project.h"
+#include "cl/sumOfMatrix.h"
+#include "cl/transpondedGradient.h"
+#include "cl/transpondedEpsilon.h"
+#include "cl/calculateHist.h"
+#include "cl/prox.h"
+
 class GPUBasedTGV {
 public:
     GPUBasedTGV(size_t argc, char **argv);
 
     void init();
 
-    void start(size_t iterations);
+    void start(size_t iterations, float tau, float lambda_tv, float lambda_tgv, float lambda_data);
 
+    void writeResult(const std::string& name);
+
+    std::vector<float> getImage();
 
 private:
     std::tuple<size_t, size_t, int, int, std::vector<float>, std::vector<float>> loadImages(std::string_view path);
+
+    void initKernels();
 
     void loadData(size_t name, const std::vector<float> &data);
 
@@ -32,15 +45,30 @@ private:
 
     std::vector<float> getBuffer(size_t name) const;
 
+    void iteration(float tau, float lambda_tv, float lambda_tgv, float lambda_data, unsigned int workGroupSize,
+                   unsigned int globalWorkSize);
 
     enum index {
-        image, v, p, q, observations, transpondedGradient, transpondedEpsilon
+        image,
+        v,
+        p,
+        q,
+        observations,
+        imageDual,
+        vDual,
+        pDual,
+        qDual,
+        transpondedGradient,
+        transpondedEpsilon,
+        histogram,
+        prox
     };
     gpu::Device device;
     gpu::Context context;
     size_t memsize;
-    std::array<std::pair<size_t, gpu::gpu_mem_32f>, 6> memoryBuffers; //0 - image(u), 1 - v , 2 - p, 3- q, 4-images, 5 - transpondedGradient, 6 - transpondedEpsilon
-    ocl::Kernel tgvEpsilonKernel, tgvGradientKernel, tgvCopyKernel;
+    std::array<std::pair<size_t, gpu::gpu_mem_32f>, 13> memoryBuffers; //mapped from index
+    ocl::Kernel tgvEpsilonKernel, tgvGradientKernel, tgvTranspondedEpsilonKernel, tgvTranspondedGradientKernel, tgvMulMatrixOnConstantKernel,
+            tgvSumOfMatrixKernel, tgvProjectKernel, tgvCopyKernel, tgvCalculateHistKernel, tgvProxKernel;
     size_t width = 0;
     size_t height = 0;
     size_t amountOfObservation = 0;

@@ -187,9 +187,6 @@ namespace mathRoutine {
         size_t height = matrix.size();
         size_t width = matrix[0].size();
         for (size_t i = 0; i < height; i++) {
-            result.resize(width);
-        }
-        for (size_t i = 0; i < height; i++) {
             for (size_t j = 0; j < width; j++) {
                 for (auto &k: matrix[i][j]) {
                     result[i][j] += k * k;

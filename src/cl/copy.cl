@@ -6,9 +6,9 @@
 
 #line 6
 
-void copyFromTo(__global float *v, __global float *p, unsigned int size, unsigned int amount) {
+void copyFromTo(__global float *v, __global float *p, unsigned int size, unsigned int dim) {
     const unsigned int index = get_global_id(0);
-    for (unsigned int i = 0; i < amount; i++) {
+    for (unsigned int i = 0; i < dim; i++) {
         v[index + i * size] = p[index + i * size];
     }
 
@@ -16,11 +16,11 @@ void copyFromTo(__global float *v, __global float *p, unsigned int size, unsigne
 
 __kernel void copy(__global float *from,
                    __global float *to,
-                   unsigned int width, unsigned int height, unsigned int amount,
-                   unsigned int n) {
+                   unsigned int width, unsigned int height, unsigned int dim,
+                   unsigned int n) {//n - image size
     const unsigned int index = get_global_id(0);
     if (index <= n) {
-        copyFromTo(from, to, width * height, amount);
+        copyFromTo(from, to, width * height, dim);
     }
 
 }
