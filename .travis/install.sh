@@ -3,8 +3,6 @@
 
 set -ev
 
-apt update
-
 ###########################
 # Get Intel OpenCL Runtime
 ###########################
