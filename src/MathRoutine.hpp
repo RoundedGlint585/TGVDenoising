@@ -143,7 +143,7 @@ namespace mathRoutine {
         }
         for (size_t i = 0; i < height; i++) {
             for (size_t j = 0; j < width - 1; j++) {
-                result[i][j + 1] += gradient[i][j][0];
+                result[i][j + 1] += gradient[i][j][0]; //result[2,2] += gradient[2,1]
             }
         }
         for (size_t i = 0; i < height - 1; i++) {

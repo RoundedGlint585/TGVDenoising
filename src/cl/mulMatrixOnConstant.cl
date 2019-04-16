@@ -20,7 +20,7 @@ __kernel void mulMatrixOnConstant(__global float *from,
                                   unsigned int width, unsigned int height, unsigned int dim,
                                   unsigned int n) {//n - image size
     const unsigned int index = get_global_id(0);
-    if (index <= n) {
+    if (index < n) {
         mul(from, k, width * height, dim);
     }
 }

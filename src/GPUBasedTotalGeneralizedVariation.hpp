@@ -30,7 +30,7 @@ public:
 
     void start(size_t iterations, float tau, float lambda_tv, float lambda_tgv, float lambda_data);
 
-    void writeResult(const std::string& name);
+    void writeResult(const std::string &name);
 
     std::vector<float> getImage();
 
@@ -47,6 +47,18 @@ private:
 
     void iteration(float tau, float lambda_tv, float lambda_tgv, float lambda_data, unsigned int workGroupSize,
                    unsigned int globalWorkSize);
+
+    void calculateImageDual(float tau_u, float lambda_tv, float tau, float lambda_data, unsigned int workGroupSize,
+                            unsigned int globalWorkSize);
+
+    void calculateVDual(float tau_v, float lambda_tgv, float lambda_tv, unsigned int workGroupSize,
+                        unsigned int globalWorkSize);
+
+    void calculatePDual(float tau_p, float lambda_tv, unsigned int workGroupSize,
+                        unsigned int globalWorkSize);
+
+    void calculateQDual(float tau_q, float lambda_tgv, unsigned int workGroupSize,
+                        unsigned int globalWorkSize);
 
     enum index {
         image,

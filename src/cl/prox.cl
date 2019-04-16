@@ -36,12 +36,12 @@ __kernel void prox(__global float *observations,
     const unsigned int index = get_global_id(0);
     const unsigned int imageSize = width * height;
     const unsigned int blockSize = amountOfObservation * 2;
-    if (index <= n) {
+    if (index < n) {
         for (unsigned int i = 0; i < blockSize / 2; i++) {
             prox[i + blockSize * index] = observations[index + imageSize * i];
         }
         for (unsigned int i = blockSize / 2; i < blockSize; i++) {
-            prox[i + blockSize * index] = image[index] + tau*lambda_data*histogram[index + imageSize * i / 2];
+            prox[i + blockSize * index] = image[index] + tau * lambda_data * histogram[index + imageSize * i / 2];
         }
         bubbleSort(prox, blockSize);
         image[index] = (prox[blockSize / 2 + index * blockSize] + prox[blockSize / 2 + index * blockSize - 1]) / 2;

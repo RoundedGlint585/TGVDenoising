@@ -20,7 +20,7 @@ __kernel void sumOfMatrix(__global float *a,
                           unsigned int width, unsigned int height, unsigned int dim,
                           unsigned int n) {//n - image size
     const unsigned int index = get_global_id(0);
-    if (index <= n) {
+    if (index < n) {
         sum(a, b, width * height, dim);
     }
 }

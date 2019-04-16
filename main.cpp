@@ -4,7 +4,7 @@
 #include <iostream>
 #include <filesystem>
 
-#define CPU
+//#define CPU
 
 
 #ifdef CPU
@@ -73,8 +73,11 @@ void checkGPU(int argc, char **argv, size_t iterations) {
 
 
 int main(int argc, char **argv) {
+    #ifdef CPU
     checkNonGPU(1000);
-    //checkGPU(argc, argv, 2); //DOES NOT WORK FOR NOW
+    #else
+    checkGPU(argc, argv, 2000); //DOES NOT WORK FOR NOW
+    #endif
 
     return 0;
 }

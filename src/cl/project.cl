@@ -13,10 +13,10 @@ __kernel void project(__global float *matrix,
     const unsigned int index = get_global_id(0);
     const unsigned int imageSize = width * height;
     const float eps = 0.001;
-    if (index <= n) {
+    if (index < n) {
         float normalized = 0;
         for (int i = 0; i < dim; i++) {
-            normalized += matrix[index + imageSize * i];
+            normalized += matrix[index + imageSize * i] * matrix[index + imageSize * i];
         }
         normalized = sqrt(normalized);
         normalized /= r;

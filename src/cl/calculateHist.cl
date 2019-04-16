@@ -12,7 +12,7 @@ __kernel void calculateHist(__global float *observations,
                             unsigned int n, unsigned int amountOfObservation) { //n - sizeof image
     const unsigned int index = get_global_id(0);
     const unsigned int imageSize = width * height;
-    if (index <= n) {
+    if (index < n) {
         for (unsigned int i = 0; i < amountOfObservation; i++) {
             histogram[index + i * imageSize] = 0;
             for (unsigned int j = 0; j < amountOfObservation; j++) {
