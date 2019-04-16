@@ -21,6 +21,8 @@ before_install:
   - sudo cp -a libgtest_main.so libgtest.so /usr/lib/
   - which valgrind
   - cd "${TRAVIS_BUILD_DIR}"
+install:
+  -sudo bash .travis/install.sh;
 script:
   - export CC=gcc-8
   - export CXX=g++-8
