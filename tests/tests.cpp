@@ -330,7 +330,7 @@ TEST_F(GPUImageTest, gpuProjectOfMatrixTest) {
     auto correctNormed = mathRoutine::anorm(correctGradient);
     for (size_t i = 0; i < correctNormed.size(); i++) {
         for (size_t j = 0; j < correctNormed[i].size(); j++) {
-            ASSERT_EQ(correctNormed[i][j], resultNormed[j + i*correctNormed[0].size()]);
+            ASSERT_NEAR(correctNormed[i][j], resultNormed[j + i*correctNormed[0].size()], 0.00000001f);
         }
     }
     auto projected = mathRoutine::project(correctGradient, 1.f);
@@ -346,7 +346,7 @@ TEST_F(GPUImageTest, gpuProjectOfMatrixTest) {
     for(size_t i = 0; i < projected.size(); i++){
         for(size_t j = 0; j < projected[i].size(); j++){
             for(size_t k = 0; k < projected[i][j].size(); k++){
-                ASSERT_EQ(projected[i][j][k], result[j+i*projected[i].size() + k*image.size()]);
+                ASSERT_NEAR(projected[i][j][k], result[j+i*projected[i].size() + k*image.size()], 0.00000001f);
             }
             std::cout << std::endl;
         }
@@ -365,181 +365,181 @@ TEST_F(GPUImageTest, gpuProjectOfMatrixTest) {
 
 }
 
-//
-//TEST_F(GPUImageTest, gpuCalculateGradient) {
-//    gpu::gpu_mem_32f gradientBuf;
-//    gradientBuf.resizeN(2 * image.size());
-//
-//    tgvGradientKernel.compile();
-//    std::cout << "compiled" << std::endl;
-//    tgvGradientKernel.exec(workSize,
-//                           imageBuf,
-//                           gradientBuf, (int) imageInMatrix.size(), (int) imageInMatrix[0].size(),
-//                           (int) image.size());
-//    std::vector<float> result(2 * image.size(), 0.f);
-//    gradientBuf.readN(result.data(), 2 * image.size());
-//    std::cout << "readed" << std::endl;
-//    for (size_t i = 0; i < correctGradient.size(); i++) {
-//        for (size_t j = 0; j < correctGradient[0].size(); j++) {
-//            ASSERT_NEAR(result[j + i * correctGradient[0].size()], (float) correctGradient[i][j][0], mathRoutine::eps);
-//            ASSERT_NEAR(result[j + i * correctGradient[0].size() + result.size() / 2], (float) correctGradient[i][j][1],
-//                        mathRoutine::eps);
-//        }
-//    }
-//    std::cout << "Gradient end" << std::endl;
-//}
-//
-//TEST_F(GPUImageTest, gpuCalculateTranspondedGradient) {
-//    gpu::gpu_mem_32f gradientBuf;
-//    gradientBuf.resizeN(2 * image.size());
-//    tgvGradientKernel.compile();
-//    tgvTranspondedGradientKernel.compile();
-//    tgvGradientKernel.exec(workSize, imageBuf, gradientBuf, (unsigned int) imageInMatrix.size(),
-//                           (unsigned int) imageInMatrix[0].size(),
-//                           (unsigned int) image.size());
-//
-//    tgvTranspondedGradientKernel.exec(workSize, gradientBuf, imageBuf,
-//                                      (unsigned int) imageInMatrix.size(), (unsigned int) imageInMatrix[0].size(),
-//                                      (unsigned int) image.size());
-//    std::vector<float> result(image.size(), 0.f);
-//    imageBuf.readN(result.data(), image.size());
-//    for (size_t i = 0; i < correctTranspondedGradient.size(); i++) {
-//        for (size_t j = 0; j < correctTranspondedGradient[0].size(); j++) {
-//            ASSERT_NEAR(result[j + i * correctTranspondedGradient[0].size()], correctTranspondedGradient[i][j],
-//                        mathRoutine::eps);
-//        }
-//    }
-//}
-//
-//TEST_F(GPUImageTest, gpuCalculateEpsilon) {
-//    std::cout << "Epsilon start" << std::endl;
-//    gpu::gpu_mem_32f gradientBuf;
-//    gradientBuf.resizeN(2 * image.size());
-//    gpu::gpu_mem_32f epsilonBuf;
-//    epsilonBuf.resizeN(4 * image.size());
-//    tgvGradientKernel.compile();
-//    tgvEpsilonKernel.compile();
-//    tgvGradientKernel.exec(workSize, imageBuf, gradientBuf, (int) imageInMatrix.size(), (int) imageInMatrix[0].size(),
-//                           (int) image.size());
-//    tgvEpsilonKernel.exec(workSize, gradientBuf, epsilonBuf, (unsigned int) imageInMatrix.size(),
-//                          (int) imageInMatrix[0].size(),
-//                          (int) image.size());
-//    std::vector<float> result(4 * image.size(), 0.f);
-//    epsilonBuf.readN(result.data(), 4 * image.size());
-//    for (size_t i = 0; i < correctEpsilon.size(); i++) {
-//        for (size_t j = 0; j < correctEpsilon[0].size(); j++) {
-//            ASSERT_NEAR(result[j + i * correctEpsilon[0].size()], (float) correctEpsilon[i][j][0], mathRoutine::eps);
-//            ASSERT_NEAR(result[j + i * correctEpsilon[0].size() + result.size() / 4], (float) correctEpsilon[i][j][1],
-//                        mathRoutine::eps);
-//            ASSERT_NEAR(result[j + i * correctEpsilon[0].size() + 2 * result.size() / 4],
-//                        (float) correctEpsilon[i][j][2], mathRoutine::eps);
-//            ASSERT_NEAR(result[j + i * correctEpsilon[0].size() + result.size() / 4 * 3],
-//                        (float) correctEpsilon[i][j][3],
-//                        mathRoutine::eps);
-//        }
-//    }
-//}
-//
-//
-//
-//
-//TEST_F(GPUImageTest, gpuCalculateTranspondedEpsilon) {
-//    gpu::gpu_mem_32f gradientBuf;
-//    gradientBuf.resizeN(2 * image.size());
-//    gpu::gpu_mem_32f epsilonBuf;
-//    epsilonBuf.resizeN(4 * image.size());
-//    tgvGradientKernel.compile();
-//    tgvEpsilonKernel.compile();
-//    tgvTranspondedKernel.compile();
-//    tgvGradientKernel.exec(workSize, imageBuf, gradientBuf, (int) imageInMatrix.size(), (int) imageInMatrix[0].size(),
-//                           (int) image.size());
-//    tgvEpsilonKernel.exec(workSize, gradientBuf,
-//                          epsilonBuf, (int) imageInMatrix.size(), (int) imageInMatrix[0].size(),
-//                          (int) image.size());
-//    tgvTranspondedKernel.exec(workSize, epsilonBuf, gradientBuf, (int) imageInMatrix.size(),
-//                              (int) imageInMatrix[0].size(),
-//                              (int) image.size());
-//    std::vector<float> result(2 * image.size(), 0.f);
-//    gradientBuf.readN(result.data(), result.size());
-//    for (size_t i = 0; i < correctTransopondedEpsilon.size(); i++) {
-//        for (size_t j = 0; j < correctTransopondedEpsilon[0].size(); j++) {
-//            ASSERT_NEAR(result[j + i * correctTransopondedEpsilon[0].size()],
-//                        (float) correctTransopondedEpsilon[i][j][0],
-//                        mathRoutine::eps);
-//            ASSERT_NEAR(result[j + i * correctTransopondedEpsilon[0].size() + image.size()],
-//                        (float) correctTransopondedEpsilon[i][j][1], mathRoutine::eps);
-//        }
-//    }
-//}
-//
-//
-//
-//
-//
-//
-//TEST_F(GPUImageTest, gpuHistsTest) {
-//    using namespace mathRoutine;
-//    std::vector<Image> images = getImagesFromPath("../tests/data");
-//
-//    //histogram fot images
-//    size_t height = images[0].size();
-//    size_t width = images[0][0].size();
-//    std::vector<Image> Ws(images.size(), mathRoutine::Image(height, std::vector<float>(width, 0)));
-//    std::cout << height << " " << width << std::endl;
-//    for (size_t histNum = 0; histNum < Ws.size(); histNum++) {
-//        for (auto &image: images) {
-//            for (size_t i = 0; i < height; i++) {
-//                for (size_t j = 0; j < width; j++) {
-//                    if (images[histNum][i][j] > image[i][j]) {
-//                        Ws[histNum][i][j]++;
-//                    } else {
-//                        Ws[histNum][i][j]--;
-//                    }
-//                }
-//            }
-//        }
-//    }
-//
-//    std::vector<float> plainImages = getImagesFromPathPlain("../tests/data");
-//    tgvCalculateHist.compile();
-//    gpu::gpu_mem_32f observations;
-//    observations.resizeN(plainImages.size());
-//    observations.writeN(plainImages.data(), plainImages.size());
-//    gpu::gpu_mem_32f histogram;
-//    histogram.resizeN(plainImages.size());
-//    tgvCalculateHist.exec(gpu::WorkSize(workGroupSize, globalWorkSize), observations, histogram, (unsigned int) width,
-//                          (unsigned int) height,
-//                          (unsigned int) image.size(), (unsigned int) images.size());
-//    std::vector<float> result(plainImages.size(), 0.f);
-//    histogram.readN(result.data(), result.size());
-//    for (size_t k = 0; k < Ws.size(); k++) {
-//        for (size_t i = 0; i < Ws[k].size(); i++) {
-//            for (size_t j = 0; j < Ws[k][i].size(); j++) {
-//                ASSERT_NEAR(Ws[k][i][j], result[j + i * Ws[k][i].size() + k * image.size()], mathRoutine::eps);
-//            }
-//        }
-//    }
-//}
-//
-//TEST_F(GPUImageTest, sqrtTest) {
-//    sqrtKernel.compile();
-//    gpu::gpu_mem_32f observations;
-//    std::vector<float> data = {0.2445, 12522.223 , 2.f, 3.2222f, 0.02f, 0.9999f};
-//    observations.resizeN(data.size());
-//    observations.writeN(data.data(), data.size());
-//    sqrtKernel.exec(gpu::WorkSize(workGroupSize, globalWorkSize), observations, (unsigned int)data.size());
-//    std::vector<float> result(data.size(), 0.f);
-//    observations.readN(result.data(), result.size());
-//    for(auto& i: data) {
-//        std::cout << std::cout.precision(12) << sqrt(i) << " ";
-//    }
-//    std::cout << std::endl;
-//    for(auto& i: result) {
-//        std::cout << std::cout.precision(12) << i << " ";
-//    }
-//    std::cout << std::endl;
-//}
-//
-//
-//
+
+TEST_F(GPUImageTest, gpuCalculateGradient) {
+    gpu::gpu_mem_32f gradientBuf;
+    gradientBuf.resizeN(2 * image.size());
+
+    tgvGradientKernel.compile();
+    std::cout << "compiled" << std::endl;
+    tgvGradientKernel.exec(workSize,
+                           imageBuf,
+                           gradientBuf, (int) imageInMatrix.size(), (int) imageInMatrix[0].size(),
+                           (int) image.size());
+    std::vector<float> result(2 * image.size(), 0.f);
+    gradientBuf.readN(result.data(), 2 * image.size());
+    std::cout << "readed" << std::endl;
+    for (size_t i = 0; i < correctGradient.size(); i++) {
+        for (size_t j = 0; j < correctGradient[0].size(); j++) {
+            ASSERT_NEAR(result[j + i * correctGradient[0].size()], (float) correctGradient[i][j][0], mathRoutine::eps);
+            ASSERT_NEAR(result[j + i * correctGradient[0].size() + result.size() / 2], (float) correctGradient[i][j][1],
+                        mathRoutine::eps);
+        }
+    }
+    std::cout << "Gradient end" << std::endl;
+}
+
+TEST_F(GPUImageTest, gpuCalculateTranspondedGradient) {
+    gpu::gpu_mem_32f gradientBuf;
+    gradientBuf.resizeN(2 * image.size());
+    tgvGradientKernel.compile();
+    tgvTranspondedGradientKernel.compile();
+    tgvGradientKernel.exec(workSize, imageBuf, gradientBuf, (unsigned int) imageInMatrix.size(),
+                           (unsigned int) imageInMatrix[0].size(),
+                           (unsigned int) image.size());
+
+    tgvTranspondedGradientKernel.exec(workSize, gradientBuf, imageBuf,
+                                      (unsigned int) imageInMatrix.size(), (unsigned int) imageInMatrix[0].size(),
+                                      (unsigned int) image.size());
+    std::vector<float> result(image.size(), 0.f);
+    imageBuf.readN(result.data(), image.size());
+    for (size_t i = 0; i < correctTranspondedGradient.size(); i++) {
+        for (size_t j = 0; j < correctTranspondedGradient[0].size(); j++) {
+            ASSERT_NEAR(result[j + i * correctTranspondedGradient[0].size()], correctTranspondedGradient[i][j],
+                        mathRoutine::eps);
+        }
+    }
+}
+
+TEST_F(GPUImageTest, gpuCalculateEpsilon) {
+    std::cout << "Epsilon start" << std::endl;
+    gpu::gpu_mem_32f gradientBuf;
+    gradientBuf.resizeN(2 * image.size());
+    gpu::gpu_mem_32f epsilonBuf;
+    epsilonBuf.resizeN(4 * image.size());
+    tgvGradientKernel.compile();
+    tgvEpsilonKernel.compile();
+    tgvGradientKernel.exec(workSize, imageBuf, gradientBuf, (int) imageInMatrix.size(), (int) imageInMatrix[0].size(),
+                           (int) image.size());
+    tgvEpsilonKernel.exec(workSize, gradientBuf, epsilonBuf, (unsigned int) imageInMatrix.size(),
+                          (int) imageInMatrix[0].size(),
+                          (int) image.size());
+    std::vector<float> result(4 * image.size(), 0.f);
+    epsilonBuf.readN(result.data(), 4 * image.size());
+    for (size_t i = 0; i < correctEpsilon.size(); i++) {
+        for (size_t j = 0; j < correctEpsilon[0].size(); j++) {
+            ASSERT_NEAR(result[j + i * correctEpsilon[0].size()], (float) correctEpsilon[i][j][0], mathRoutine::eps);
+            ASSERT_NEAR(result[j + i * correctEpsilon[0].size() + result.size() / 4], (float) correctEpsilon[i][j][1],
+                        mathRoutine::eps);
+            ASSERT_NEAR(result[j + i * correctEpsilon[0].size() + 2 * result.size() / 4],
+                        (float) correctEpsilon[i][j][2], mathRoutine::eps);
+            ASSERT_NEAR(result[j + i * correctEpsilon[0].size() + result.size() / 4 * 3],
+                        (float) correctEpsilon[i][j][3],
+                        mathRoutine::eps);
+        }
+    }
+}
+
+
+
+
+TEST_F(GPUImageTest, gpuCalculateTranspondedEpsilon) {
+    gpu::gpu_mem_32f gradientBuf;
+    gradientBuf.resizeN(2 * image.size());
+    gpu::gpu_mem_32f epsilonBuf;
+    epsilonBuf.resizeN(4 * image.size());
+    tgvGradientKernel.compile();
+    tgvEpsilonKernel.compile();
+    tgvTranspondedKernel.compile();
+    tgvGradientKernel.exec(workSize, imageBuf, gradientBuf, (int) imageInMatrix.size(), (int) imageInMatrix[0].size(),
+                           (int) image.size());
+    tgvEpsilonKernel.exec(workSize, gradientBuf,
+                          epsilonBuf, (int) imageInMatrix.size(), (int) imageInMatrix[0].size(),
+                          (int) image.size());
+    tgvTranspondedKernel.exec(workSize, epsilonBuf, gradientBuf, (int) imageInMatrix.size(),
+                              (int) imageInMatrix[0].size(),
+                              (int) image.size());
+    std::vector<float> result(2 * image.size(), 0.f);
+    gradientBuf.readN(result.data(), result.size());
+    for (size_t i = 0; i < correctTransopondedEpsilon.size(); i++) {
+        for (size_t j = 0; j < correctTransopondedEpsilon[0].size(); j++) {
+            ASSERT_NEAR(result[j + i * correctTransopondedEpsilon[0].size()],
+                        (float) correctTransopondedEpsilon[i][j][0],
+                        mathRoutine::eps);
+            ASSERT_NEAR(result[j + i * correctTransopondedEpsilon[0].size() + image.size()],
+                        (float) correctTransopondedEpsilon[i][j][1], mathRoutine::eps);
+        }
+    }
+}
+
+
+
+
+
+
+TEST_F(GPUImageTest, gpuHistsTest) {
+    using namespace mathRoutine;
+    std::vector<Image> images = getImagesFromPath("../tests/data");
+
+    //histogram fot images
+    size_t height = images[0].size();
+    size_t width = images[0][0].size();
+    std::vector<Image> Ws(images.size(), mathRoutine::Image(height, std::vector<float>(width, 0)));
+    std::cout << height << " " << width << std::endl;
+    for (size_t histNum = 0; histNum < Ws.size(); histNum++) {
+        for (auto &image: images) {
+            for (size_t i = 0; i < height; i++) {
+                for (size_t j = 0; j < width; j++) {
+                    if (images[histNum][i][j] > image[i][j]) {
+                        Ws[histNum][i][j]++;
+                    } else {
+                        Ws[histNum][i][j]--;
+                    }
+                }
+            }
+        }
+    }
+
+    std::vector<float> plainImages = getImagesFromPathPlain("../tests/data");
+    tgvCalculateHist.compile();
+    gpu::gpu_mem_32f observations;
+    observations.resizeN(plainImages.size());
+    observations.writeN(plainImages.data(), plainImages.size());
+    gpu::gpu_mem_32f histogram;
+    histogram.resizeN(plainImages.size());
+    tgvCalculateHist.exec(gpu::WorkSize(workGroupSize, globalWorkSize), observations, histogram, (unsigned int) width,
+                          (unsigned int) height,
+                          (unsigned int) image.size(), (unsigned int) images.size());
+    std::vector<float> result(plainImages.size(), 0.f);
+    histogram.readN(result.data(), result.size());
+    for (size_t k = 0; k < Ws.size(); k++) {
+        for (size_t i = 0; i < Ws[k].size(); i++) {
+            for (size_t j = 0; j < Ws[k][i].size(); j++) {
+                ASSERT_NEAR(Ws[k][i][j], result[j + i * Ws[k][i].size() + k * image.size()], mathRoutine::eps);
+            }
+        }
+    }
+}
+
+TEST_F(GPUImageTest, sqrtTest) {
+    sqrtKernel.compile();
+    gpu::gpu_mem_32f observations;
+    std::vector<float> data = {0.2445, 12522.223 , 2.f, 3.2222f, 0.02f, 0.9999f};
+    observations.resizeN(data.size());
+    observations.writeN(data.data(), data.size());
+    sqrtKernel.exec(gpu::WorkSize(workGroupSize, globalWorkSize), observations, (unsigned int)data.size());
+    std::vector<float> result(data.size(), 0.f);
+    observations.readN(result.data(), result.size());
+    for(auto& i: data) {
+        std::cout << std::cout.precision(12) << sqrt(i) << " ";
+    }
+    std::cout << std::endl;
+    for(auto& i: result) {
+        std::cout << std::cout.precision(12) << i << " ";
+    }
+    std::cout << std::endl;
+}
+
+
+
 ////TODO: Tests for GPU Version
