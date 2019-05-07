@@ -191,11 +191,7 @@ namespace mathRoutine {
                 for (auto &k: matrix[i][j]) {
                     result[i][j] += k * k;
                 }
-            }
-        }
-        for (auto &i: result) {
-            for (auto &j: i) {
-                j = sqrtf(j);
+                result[i][j] = sqrtf(result[i][j]);
             }
         }
         return result;
@@ -206,15 +202,17 @@ namespace mathRoutine {
         Matrix result = matrix;
         size_t height = matrix.size();
         size_t width = matrix[0].size();
-        Image normed = anorm(matrix);
-        for (auto &i: normed) { // normilized on r, if zero setted as 1
-            for (auto &j : i) {
+        Image normed = anorm(result);
+
+        for(auto& i: normed){
+            for(auto& j: i){
                 j /= r;
-                if (j < eps) {
-                    j = 1;
+                if(j < eps){
+                    j = 1.f;
                 }
             }
         }
+
         for (size_t i = 0; i < height; i++) {
             for (size_t j = 0; j < width; j++) {
                 for (auto &k: result[i][j]) {

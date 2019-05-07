@@ -21,10 +21,12 @@
 #include "cl/transpondedEpsilon.h"
 #include "cl/calculateHist.h"
 #include "cl/prox.h"
+#include "cl/clear.h"
+#include "cl/anorm.h"
 
 class GPUBasedTGV {
 public:
-    GPUBasedTGV(size_t argc, char **argv);
+    GPUBasedTGV(size_t argc, char **argv, size_t amountOfImagesGPU);
 
     void init();
 
@@ -80,9 +82,10 @@ private:
     size_t memsize;
     std::array<std::pair<size_t, gpu::gpu_mem_32f>, 13> memoryBuffers; //mapped from index
     ocl::Kernel tgvEpsilonKernel, tgvGradientKernel, tgvTranspondedEpsilonKernel, tgvTranspondedGradientKernel, tgvMulMatrixOnConstantKernel,
-            tgvSumOfMatrixKernel, tgvProjectKernel, tgvCopyKernel, tgvCalculateHistKernel, tgvProxKernel;
+            tgvSumOfMatrixKernel, tgvProjectKernel, tgvCopyKernel, tgvCalculateHistKernel, tgvProxKernel, tgvClearKernel, tgvAnormKernel;
     size_t width = 0;
     size_t height = 0;
     size_t amountOfObservation = 0;
+    size_t amountOfImagesToGPU = 0;
 };
 

@@ -5,7 +5,7 @@
 #include "GPUBasedTotalGeneralizedVariation.hpp"
 #include <filesystem>
 
-GPUBasedTGV::GPUBasedTGV(size_t argc, char **argv) {
+GPUBasedTGV::GPUBasedTGV(size_t argc, char **argv, size_t amountOfImagesGPU):amountOfImagesToGPU(amountOfImagesGPU){
     device = gpu::chooseGPUDevice(argc, argv);
     context.init(device.device_id_opencl);
     context.activate();
@@ -26,6 +26,8 @@ void GPUBasedTGV::initKernels() {
                                               "transpondedEpsilon");
     tgvCalculateHistKernel = ocl::Kernel(calculate_hist_kernel, calculate_hist_kernel_length, "calculateHist");
     tgvProxKernel = ocl::Kernel(prox_kernel, prox_kernel_length, "prox");
+    tgvClearKernel = ocl::Kernel(clear_kernel, clear_kernel_length, "clear");
+    tgvAnormKernel = ocl::Kernel(anorm_kernel, anorm_kernel_length, "anorm");
     tgvEpsilonKernel.compile();
     tgvGradientKernel.compile();
     tgvCopyKernel.compile();
@@ -36,6 +38,8 @@ void GPUBasedTGV::initKernels() {
     tgvTranspondedEpsilonKernel.compile();
     tgvCalculateHistKernel.compile();
     tgvProxKernel.compile();
+    tgvClearKernel.compile();
+    tgvAnormKernel.compile();
 }
 
 void GPUBasedTGV::init() {
@@ -45,7 +49,7 @@ void GPUBasedTGV::init() {
     loadData(image, std::get<4>(resultOfLoading));
     width = std::get<2>(resultOfLoading);
     height = std::get<3>(resultOfLoading);
-    amountOfObservation = std::get<1>(resultOfLoading) - 1;
+    amountOfObservation = std::get<1>(resultOfLoading);
     size_t sizeOfImage = height * width;
     reserveDataN(imageDual, sizeOfImage);
     reserveDataN(v, sizeOfImage * 2);
@@ -85,11 +89,13 @@ GPUBasedTGV::loadImages(std::string_view path) {
         } else {
             for (size_t i = 0; i < width * height; i++) {
                 image.emplace_back((float) bytes[i]);
+                observations.emplace_back((float) bytes[i]);
             }
         }
         amountOfImages++;
         totalSize += width * height;
     }
+
     return std::make_tuple(totalSize, amountOfImages, width, height, image, observations);
 }
 
@@ -133,8 +139,10 @@ void GPUBasedTGV::start(size_t iterations, float tau, float lambda_tv, float lam
                           memoryBuffers[p].second,
                           memoryBuffers[q].second, (unsigned int) width, (unsigned int) height,
                           (unsigned int) memoryBuffers[image].first);
-    tgvCalculateHistKernel.exec(gpu::WorkSize(workGroupSize, globalWorkSize), memoryBuffers[observations].second, memoryBuffers[histogram].second, (unsigned int) width, (unsigned int) height,
+    tgvCalculateHistKernel.exec(gpu::WorkSize(workGroupSize, globalWorkSize), memoryBuffers[observations].second,
+                                memoryBuffers[histogram].second, (unsigned int) width, (unsigned int) height,
                                 (unsigned int) memoryBuffers[image].first, (unsigned int) amountOfObservation);
+    auto hist = getBuffer(histogram);
     ///
     for (size_t i = 0; i < iterations; i++) {
         if (i % 100 == 0) {
@@ -169,10 +177,12 @@ GPUBasedTGV::calculateImageDual(float tau_u, float lambda_tv, float tau, float l
                                       memoryBuffers[transpondedGradient].second, (unsigned int) width,
                                       (unsigned int) height,
                                       (unsigned int) memoryBuffers[image].first);
+
     tgvMulMatrixOnConstantKernel.exec(workSize,
                                       memoryBuffers[transpondedGradient].second, (-tau_u * lambda_tv),
                                       (unsigned int) width, (unsigned int) height, 1,
                                       (unsigned int) memoryBuffers[image].first);
+
     tgvSumOfMatrixKernel.exec(workSize,
                               memoryBuffers[transpondedGradient].second, //here are possible problems with accur
                               memoryBuffers[image].second, (unsigned int) width, (unsigned int) height, 1,
@@ -185,7 +195,6 @@ GPUBasedTGV::calculateImageDual(float tau_u, float lambda_tv, float tau, float l
     tgvCopyKernel.exec(workSize, memoryBuffers[transpondedGradient].second, memoryBuffers[imageDual].second,
                        (unsigned int) width, (unsigned int) height, 1,
                        (unsigned int) memoryBuffers[image].first);
-
 }
 
 void GPUBasedTGV::calculateVDual(float tau_v, float lambda_tgv, float lambda_tv, unsigned int workGroupSize,
@@ -219,11 +228,11 @@ void GPUBasedTGV::calculateVDual(float tau_v, float lambda_tgv, float lambda_tv,
                                       memoryBuffers[pDual].second, (tau_v * lambda_tv),
                                       (unsigned int) width, (unsigned int) height, 2,
                                       (unsigned int) memoryBuffers[image].first);
-    //v + (-lambda_tgv *tau_v) * mathRoutine::calculateTranspondedEpsilon(q) + (tau_v*lambda_tv )* p;
+    //v + (-lambda_tgv *tau_v) * mathRoutine::calculateTranspondedEpsilon(q) + (tau_v*lambda_tv )* p
+
     tgvSumOfMatrixKernel.exec(workSize, memoryBuffers[vDual].second,
                               memoryBuffers[pDual].second, (unsigned int) width, (unsigned int) height, 2,
                               (unsigned int) memoryBuffers[image].first);
-
 }
 
 void GPUBasedTGV::calculatePDual(float tau_p, float lambda_tv, unsigned int workGroupSize,
@@ -235,31 +244,26 @@ void GPUBasedTGV::calculatePDual(float tau_p, float lambda_tv, unsigned int work
                        memoryBuffers[imageDual].second, //temporary copy p to multiply on lambda_tv
                        memoryBuffers[transpondedGradient].second, (unsigned int) width, (unsigned int) height, 1,
                        (unsigned int) memoryBuffers[image].first);
-    auto getDualIm = getBuffer(transpondedGradient);
     //Умножаем на 2 (2 * un)
     tgvMulMatrixOnConstantKernel.exec(workSize,
                                       memoryBuffers[transpondedGradient].second, 2.f,
                                       (unsigned int) width, (unsigned int) height, 1,
                                       (unsigned int) memoryBuffers[image].first);
-    auto getDualImMul = getBuffer(transpondedGradient);
     //Добавляем Image (2*un)+u
     tgvSumOfMatrixKernel.exec(workSize, memoryBuffers[transpondedGradient].second,
                               memoryBuffers[image].second, (unsigned int) width, (unsigned int) height, 1,
                               (unsigned int) memoryBuffers[image].first);
-    auto addIm = getBuffer(transpondedGradient);
 
     //Считаем градиент пишем в transpondedEpsilon mathRoutine::calculateGradient(2 * un +  u)
     tgvGradientKernel.exec(workSize,
                            memoryBuffers[transpondedGradient].second,
                            memoryBuffers[transpondedEpsilon].second, (unsigned int) width, (unsigned int) height,
                            (unsigned int) memoryBuffers[image].first);
-    auto gradient = getBuffer(transpondedEpsilon);
     //Умножаем на -1 (-1)* mathRoutine::calculateGradient(2 * un +  u)
     tgvMulMatrixOnConstantKernel.exec(workSize,
                                       memoryBuffers[transpondedEpsilon].second, -1.f,
                                       (unsigned int) width, (unsigned int) height, 2,
                                       (unsigned int) memoryBuffers[image].first);
-    auto negGradient = getBuffer(transpondedEpsilon);
     //Копируем vn в pn
     tgvCopyKernel.exec(workSize,
                        memoryBuffers[vDual].second, //temporary copy p to multiply on lambda_tv
@@ -288,11 +292,19 @@ void GPUBasedTGV::calculatePDual(float tau_p, float lambda_tv, unsigned int work
     tgvSumOfMatrixKernel.exec(workSize, memoryBuffers[pDual].second,
                               memoryBuffers[p].second, (unsigned int) width, (unsigned int) height, 2,
                               (unsigned int) memoryBuffers[image].first);
+    gpu::gpu_mem_32f anormed;
+    anormed.resizeN(height * width);
+    tgvAnormKernel.exec(workSize, memoryBuffers[pDual].second, anormed,
+                        (unsigned int) width, (unsigned int) height, (unsigned int) memoryBuffers[image].first, 2,
+                        (float) lambda_tv);
 
-    tgvProjectKernel.exec(workSize, memoryBuffers[pDual].second,
-                          (unsigned int) width, (unsigned int) height, (unsigned int) memoryBuffers[image].first, 2,
-                          lambda_tv);
-
+    std::vector<float> result(height * width, 0);
+    anormed.readN(result.data(), result.size());
+    auto before = getBuffer(pDual);
+    tgvProjectKernel.exec(workSize, memoryBuffers[pDual].second, anormed,
+                          (unsigned int) width, (unsigned int) height, (unsigned int) memoryBuffers[image].first, 2U);
+    auto projected = getBuffer(pDual);
+    std::cout << "";
 }
 
 void GPUBasedTGV::calculateQDual(float tau_q, float lambda_tgv, unsigned int workGroupSize,
@@ -326,10 +338,16 @@ void GPUBasedTGV::calculateQDual(float tau_q, float lambda_tgv, unsigned int wor
     tgvSumOfMatrixKernel.exec(workSize, memoryBuffers[qDual].second,
                               memoryBuffers[q].second, (unsigned int) width, (unsigned int) height, 4,
                               (unsigned int) memoryBuffers[image].first);
+    gpu::gpu_mem_32f anormed;
+    anormed.resizeN(height * width);
+    tgvAnormKernel.exec(workSize, memoryBuffers[qDual].second, anormed,
+                        (unsigned int) width, (unsigned int) height, (unsigned int) memoryBuffers[image].first, 4, 1.f);
+
+    std::vector<float> result(height * width, 0);
+    anormed.readN(result.data(), result.size());
     //project
-    tgvProjectKernel.exec(workSize, memoryBuffers[qDual].second,
-                          (unsigned int) width, (unsigned int) height, (unsigned int) memoryBuffers[image].first, 4,
-                          lambda_tgv);
+    tgvProjectKernel.exec(workSize, memoryBuffers[qDual].second, anormed,
+                          (unsigned int) width, (unsigned int) height, (unsigned int) memoryBuffers[image].first, 4);
 }
 
 void GPUBasedTGV::iteration(float tau, float lambda_tv, float lambda_tgv, float lambda_data, unsigned int workGroupSize,
@@ -340,10 +358,10 @@ void GPUBasedTGV::iteration(float tau, float lambda_tv, float lambda_tgv, float 
     tau_p = tau;
     tau_q = tau;
     auto workSize = gpu::WorkSize(workGroupSize, globalWorkSize);
-    auto &imageBuffer = memoryBuffers[image].second;
-    auto &imageDualBuffer = memoryBuffers[imageDual].second;
     ///UN
     calculateImageDual(tau_u, lambda_tv, tau, lambda_data, workGroupSize, globalWorkSize);
+    ///
+
     /// VN
     calculateVDual(tau_v, lambda_tgv, lambda_tv, workGroupSize, globalWorkSize);
     ///
@@ -356,7 +374,8 @@ void GPUBasedTGV::iteration(float tau, float lambda_tv, float lambda_tgv, float 
     calculateQDual(tau_q, lambda_tgv, workGroupSize, globalWorkSize);
     ///
 
-    /// Move to previus location
+
+    /// Move to prev location
     tgvCopyKernel.exec(workSize,
                        memoryBuffers[imageDual].second,
                        memoryBuffers[image].second, (unsigned int) width, (unsigned int) height, 1,
@@ -374,4 +393,25 @@ void GPUBasedTGV::iteration(float tau, float lambda_tv, float lambda_tgv, float 
                        memoryBuffers[q].second, (unsigned int) width, (unsigned int) height, 4,
                        (unsigned int) memoryBuffers[image].first);
     ///
+
+    tgvClearKernel.exec(workSize,
+                        memoryBuffers[imageDual].second, (unsigned int) width, (unsigned int) height, 1,
+                        (unsigned int) memoryBuffers[image].first);
+    tgvClearKernel.exec(workSize,
+                        memoryBuffers[vDual].second, (unsigned int) width, (unsigned int) height, 2,
+                        (unsigned int) memoryBuffers[image].first);
+    tgvClearKernel.exec(workSize,
+                        memoryBuffers[pDual].second, (unsigned int) width, (unsigned int) height, 2,
+                        (unsigned int) memoryBuffers[image].first);
+    tgvClearKernel.exec(workSize,
+                        memoryBuffers[qDual].second, (unsigned int) width, (unsigned int) height, 4,
+                        (unsigned int) memoryBuffers[image].first);
+    tgvClearKernel.exec(workSize,
+                        memoryBuffers[transpondedGradient].second, (unsigned int) width, (unsigned int) height, 1,
+                        (unsigned int) memoryBuffers[image].first);
+    tgvClearKernel.exec(workSize,
+                        memoryBuffers[transpondedEpsilon].second, (unsigned int) width, (unsigned int) height, 2,
+                        (unsigned int) memoryBuffers[image].first);
+
+
 }
