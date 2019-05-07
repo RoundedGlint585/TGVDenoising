@@ -17,9 +17,9 @@ __kernel void calculateHist(__global float *observations,
             histogram[index + i * imageSize] = 0;
             for (unsigned int j = 0; j < amountOfObservation; j++) {
                 if (observations[index + i * imageSize] > observations[index + j * imageSize]) {
-                    histogram[index + i * imageSize]++;
+                    histogram[index + i * imageSize]+= 1.f;
                 } else {
-                    histogram[index + i * imageSize]--;
+                    histogram[index + i * imageSize]-= 1.f;
                 }
             }
         }
