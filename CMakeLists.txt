@@ -10,7 +10,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}\
 add_subdirectory(third-party)
 
 
-if(false)
+if(true)
     set(CMAKE_BUILD_TYPE Debug)
     # convertIntoHeader CMake-функция объявлена в libs/gpu/CMakeLists.txt:71
     # Она считывает все байты из файла src/cl/aplusb.cl (т.е. весь исходный код кернела) и преобразует их в массив байтов в файле src/cl/aplusb_cl.h aplusb_kernel
@@ -55,7 +55,7 @@ else()
     convertIntoHeader(src/cl/anorm.cl src/cl/anorm.h anorm_kernel)
 
     include_directories(${GTEST_INCLUDE_DIRS})
-    add_executable(runUnitTests tests/tests.cpp src/TotalGeneralizedVariation.cpp src/TotalGeneralizedVariation.hpp src/MathRoutine.hpp src/cl/epsilon.h src/cl/gradient.h src/cl/copy.h src/cl/mulMatrixOnConstant.h src/cl/project.h src/cl/sumOfMatrix.h src/cl/transpondedGradient.h src/cl/transpondedEpsilon.h src/cl/calculateHist.h
+    add_executable(runUnitTests tests/tests.cpp src/TotalGeneralizedVariation.cpp src/GPUBasedTotalGeneralizedVariation.cpp src/GPUBasedTotalGeneralizedVariation.hpp src/TotalGeneralizedVariation.hpp src/MathRoutine.hpp src/cl/epsilon.h src/cl/gradient.h src/cl/copy.h src/cl/mulMatrixOnConstant.h src/cl/project.h src/cl/sumOfMatrix.h src/cl/transpondedGradient.h src/cl/transpondedEpsilon.h src/cl/calculateHist.h
             src/cl/prox.h src/cl/sqrt.h  src/cl/anorm.h)
     target_link_libraries(runUnitTests ${GTEST_LIBRARIES} pthread libclew libgpu libutils libstbimages stdc++fs)
 endif()

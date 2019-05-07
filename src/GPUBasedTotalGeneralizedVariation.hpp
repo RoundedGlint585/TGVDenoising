@@ -11,24 +11,13 @@
 #include <unordered_map>
 #include <stb_image.h>
 #include <stb_image_write.h>
-#include "cl/epsilon.h"
-#include "cl/gradient.h"
-#include "cl/copy.h"
-#include "cl/mulMatrixOnConstant.h"
-#include "cl/project.h"
-#include "cl/sumOfMatrix.h"
-#include "cl/transpondedGradient.h"
-#include "cl/transpondedEpsilon.h"
-#include "cl/calculateHist.h"
-#include "cl/prox.h"
-#include "cl/clear.h"
-#include "cl/anorm.h"
+#include "../src/cl/common.hpp"
 
 class GPUBasedTGV {
 public:
     GPUBasedTGV(size_t argc, char **argv, size_t amountOfImagesGPU);
 
-    void init();
+    void init(const std::string& path);
 
     void start(size_t iterations, float tau, float lambda_tv, float lambda_tgv, float lambda_data);
 
@@ -62,7 +51,7 @@ private:
     void calculateQDual(float tau_q, float lambda_tgv, unsigned int workGroupSize,
                         unsigned int globalWorkSize);
 
-    enum index {
+    enum bufIndex {
         image,
         v,
         p,
@@ -81,6 +70,7 @@ private:
     gpu::Context context;
     size_t memsize;
     std::array<std::pair<size_t, gpu::gpu_mem_32f>, 13> memoryBuffers; //mapped from index
+
     ocl::Kernel tgvEpsilonKernel, tgvGradientKernel, tgvTranspondedEpsilonKernel, tgvTranspondedGradientKernel, tgvMulMatrixOnConstantKernel,
             tgvSumOfMatrixKernel, tgvProjectKernel, tgvCopyKernel, tgvCalculateHistKernel, tgvProxKernel, tgvClearKernel, tgvAnormKernel;
     size_t width = 0;

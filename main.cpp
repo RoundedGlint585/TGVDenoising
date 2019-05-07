@@ -70,7 +70,7 @@ void checkGPU(int argc, char **argv, size_t iterations) {
     lambda_tv /= lambda_data;
     lambda_tgv /= lambda_data;
     auto worker = GPUBasedTGV(argc, argv, 10);
-    worker.init();
+    worker.init("data");
     worker.start(iterations, tau, lambda_tv, lambda_tgv, lambda_data);
     worker.writeResult("result.png");
 }

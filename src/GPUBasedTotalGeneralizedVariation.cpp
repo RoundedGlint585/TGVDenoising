@@ -5,7 +5,7 @@
 #include "GPUBasedTotalGeneralizedVariation.hpp"
 #include <filesystem>
 
-GPUBasedTGV::GPUBasedTGV(size_t argc, char **argv, size_t amountOfImagesGPU):amountOfImagesToGPU(amountOfImagesGPU){
+GPUBasedTGV::GPUBasedTGV(size_t argc, char **argv, size_t amountOfImagesGPU) : amountOfImagesToGPU(amountOfImagesGPU) {
     device = gpu::chooseGPUDevice(argc, argv);
     context.init(device.device_id_opencl);
     context.activate();
@@ -42,9 +42,9 @@ void GPUBasedTGV::initKernels() {
     tgvAnormKernel.compile();
 }
 
-void GPUBasedTGV::init() {
+void GPUBasedTGV::init(const std::string& path) {
     initKernels();
-    auto resultOfLoading = loadImages("data");
+    auto resultOfLoading = loadImages(path.c_str());
     loadData(observations, std::get<5>(resultOfLoading));
     loadData(image, std::get<4>(resultOfLoading));
     width = std::get<2>(resultOfLoading);
@@ -412,6 +412,5 @@ void GPUBasedTGV::iteration(float tau, float lambda_tv, float lambda_tgv, float 
     tgvClearKernel.exec(workSize,
                         memoryBuffers[transpondedEpsilon].second, (unsigned int) width, (unsigned int) height, 2,
                         (unsigned int) memoryBuffers[image].first);
-
 
 }

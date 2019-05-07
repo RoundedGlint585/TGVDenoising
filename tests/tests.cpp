@@ -11,16 +11,8 @@
 #include <libutils/fast_random.h>
 #include <libgpu/context.h>
 #include <libgpu/shared_device_buffer.h>
+#include "../src/cl/common.hpp"
 #include "../src/MathRoutine.hpp"
-#include "../src/cl/gradient.h"
-#include "../src/cl/epsilon.h"
-#include "../src/cl/transpondedGradient.h"
-#include "../src/cl/transpondedEpsilon.h"
-#include "../src/cl/project.h"
-#include "../src/cl/calculateHist.h"
-#include "../src/cl/prox.h"
-#include "../src/cl/sqrt.h"
-#include "../src/cl/anorm.h"
 
 class imageTest : public ::testing::Test {
 protected:
