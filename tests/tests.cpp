@@ -330,7 +330,9 @@ TEST_F(GPUImageTest, gpuProjectOfMatrixTest) {
     auto correctNormed = mathRoutine::anorm(correctGradient);
     for (size_t i = 0; i < correctNormed.size(); i++) {
         for (size_t j = 0; j < correctNormed[i].size(); j++) {
-            ASSERT_NEAR(correctNormed[i][j], resultNormed[j + i*correctNormed[0].size()], 0.0000001f);
+            float first = correctNormed[i][j];
+            float second = resultNormed[j + i*correctNormed[0].size()];
+            ASSERT_TRUE(*reinterpret_cast<uint32_t * >(&first) == *reinterpret_cast<uint32_t *>(&second));
         }
     }
     auto projected = mathRoutine::project(correctGradient, 1.f);
@@ -346,11 +348,11 @@ TEST_F(GPUImageTest, gpuProjectOfMatrixTest) {
     for(size_t i = 0; i < projected.size(); i++){
         for(size_t j = 0; j < projected[i].size(); j++){
             for(size_t k = 0; k < projected[i][j].size(); k++){
-                ASSERT_NEAR(projected[i][j][k], result[j+i*projected[i].size() + k*image.size()], 0.0000001f);
+                float first = projected[i][j][k];
+                float second = result[j+i*projected[i].size() + k*image.size()];
+                ASSERT_TRUE(*reinterpret_cast<uint32_t * >(&first) == *reinterpret_cast<uint32_t * >(&second));
             }
-            std::cout << std::endl;
         }
-        std::cout << std::endl;
     }
     /*for (size_t i = 0; i < correctProjectedGradient.size(); i++) {
         for (size_t j = 0; j < correctProjectedGradient[0].size(); j++) {
@@ -369,16 +371,13 @@ TEST_F(GPUImageTest, gpuProjectOfMatrixTest) {
 TEST_F(GPUImageTest, gpuCalculateGradient) {
     gpu::gpu_mem_32f gradientBuf;
     gradientBuf.resizeN(2 * image.size());
-
     tgvGradientKernel.compile();
-    std::cout << "compiled" << std::endl;
     tgvGradientKernel.exec(workSize,
                            imageBuf,
                            gradientBuf, (int) imageInMatrix.size(), (int) imageInMatrix[0].size(),
                            (int) image.size());
     std::vector<float> result(2 * image.size(), 0.f);
     gradientBuf.readN(result.data(), 2 * image.size());
-    std::cout << "readed" << std::endl;
     for (size_t i = 0; i < correctGradient.size(); i++) {
         for (size_t j = 0; j < correctGradient[0].size(); j++) {
             ASSERT_NEAR(result[j + i * correctGradient[0].size()], (float) correctGradient[i][j][0], mathRoutine::eps);
@@ -386,7 +385,6 @@ TEST_F(GPUImageTest, gpuCalculateGradient) {
                         mathRoutine::eps);
         }
     }
-    std::cout << "Gradient end" << std::endl;
 }
 
 TEST_F(GPUImageTest, gpuCalculateTranspondedGradient) {
@@ -412,7 +410,6 @@ TEST_F(GPUImageTest, gpuCalculateTranspondedGradient) {
 }
 
 TEST_F(GPUImageTest, gpuCalculateEpsilon) {
-    std::cout << "Epsilon start" << std::endl;
     gpu::gpu_mem_32f gradientBuf;
     gradientBuf.resizeN(2 * image.size());
     gpu::gpu_mem_32f epsilonBuf;
@@ -520,26 +517,6 @@ TEST_F(GPUImageTest, gpuHistsTest) {
         }
     }
 }
-
-TEST_F(GPUImageTest, sqrtTest) {
-    sqrtKernel.compile();
-    gpu::gpu_mem_32f observations;
-    std::vector<float> data = {0.2445, 12522.223 , 2.f, 3.2222f, 0.02f, 0.9999f};
-    observations.resizeN(data.size());
-    observations.writeN(data.data(), data.size());
-    sqrtKernel.exec(gpu::WorkSize(workGroupSize, globalWorkSize), observations, (unsigned int)data.size());
-    std::vector<float> result(data.size(), 0.f);
-    observations.readN(result.data(), result.size());
-    for(auto& i: data) {
-        std::cout << std::cout.precision(12) << sqrt(i) << " ";
-    }
-    std::cout << std::endl;
-    for(auto& i: result) {
-        std::cout << std::cout.precision(12) << i << " ";
-    }
-    std::cout << std::endl;
-}
-
 
 
 //////TODO: Tests for GPU Version
