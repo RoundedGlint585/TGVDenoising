@@ -6,7 +6,7 @@
 
 #line 6
 
-__kernel void sqrt(__global float *from,
+__kernel void sqrtCalc(__global float *from,
                    unsigned int n) {//n - image size
     const unsigned int index = get_global_id(0);
     if (index < n) {

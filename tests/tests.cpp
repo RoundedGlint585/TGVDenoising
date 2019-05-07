@@ -302,7 +302,7 @@ protected:
     ocl::Kernel tgvCalculateHist = ocl::Kernel(calculate_hist_kernel, calculate_hist_kernel_length, "calculateHist");
     ocl::Kernel tgvAnormKernel = ocl::Kernel(anorm_kernel, anorm_kernel_length, "anorm");
     ocl::Kernel tgvProxKernel = ocl::Kernel(prox_kernel, prox_kernel_length, "prox");
-    ocl::Kernel sqrtKernel = ocl::Kernel(sqrt_kernel, sqrt_kernel_length, "sqrt");
+    ocl::Kernel sqrtKernel = ocl::Kernel(sqrt_kernel, sqrt_kernel_length, "sqrtCalc");
     gpu::gpu_mem_32f imageBuf;
     float tau = 1 / (sqrtf(8)) / 4 / 8;
     float lambda_data = 1.0;
