@@ -330,7 +330,7 @@ TEST_F(GPUImageTest, gpuProjectOfMatrixTest) {
     auto correctNormed = mathRoutine::anorm(correctGradient);
     for (size_t i = 0; i < correctNormed.size(); i++) {
         for (size_t j = 0; j < correctNormed[i].size(); j++) {
-            ASSERT_NEAR(correctNormed[i][j], resultNormed[j + i*correctNormed[0].size()], 0.00000001f);
+            ASSERT_NEAR(correctNormed[i][j], resultNormed[j + i*correctNormed[0].size()], 0.0000001f);
         }
     }
     auto projected = mathRoutine::project(correctGradient, 1.f);
@@ -346,7 +346,7 @@ TEST_F(GPUImageTest, gpuProjectOfMatrixTest) {
     for(size_t i = 0; i < projected.size(); i++){
         for(size_t j = 0; j < projected[i].size(); j++){
             for(size_t k = 0; k < projected[i][j].size(); k++){
-                ASSERT_NEAR(projected[i][j][k], result[j+i*projected[i].size() + k*image.size()], 0.00000001f);
+                ASSERT_NEAR(projected[i][j][k], result[j+i*projected[i].size() + k*image.size()], 0.0000001f);
             }
             std::cout << std::endl;
         }
@@ -542,4 +542,4 @@ TEST_F(GPUImageTest, sqrtTest) {
 
 
 
-////TODO: Tests for GPU Version
+//////TODO: Tests for GPU Version

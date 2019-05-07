@@ -13,7 +13,7 @@ __kernel void project(__global float *matrix, __global float *normed,
     const unsigned int imageSize = width * height;
     if (index < n) {
         for (unsigned int i = 0; i < dim; i++) {
-            if(normed[index] < 0.001f){
+            if(normed[index] < 0.00001f){
                 normed[index] = 1.f;
             }
             matrix[index + imageSize * i] = matrix[index + imageSize * i] /  normed[index];
