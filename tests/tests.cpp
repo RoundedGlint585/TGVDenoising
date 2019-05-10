@@ -11,7 +11,7 @@
 #include <libutils/fast_random.h>
 #include <libgpu/context.h>
 #include <libgpu/shared_device_buffer.h>
-#include "../src/cl/common.hpp"
+#include "../src/commonKernels.hpp"
 #include "../src/MathRoutine.hpp"
 
 class imageTest : public ::testing::Test {

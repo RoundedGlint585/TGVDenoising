@@ -34,7 +34,7 @@ private:
 
     Image prox(const Image &image, float tau, float lambda_data);
 
-    void tgvIteration(Image &u, Gradient &v, Gradient &p, Epsilon q, float tau, float lambda_tv, float lambda_tgv,
+    void tgvIteration(Image &u, Gradient &v, Gradient &p, Epsilon &q, float tau, float lambda_tv, float lambda_tgv,
                       float lambda_data);
 
     //

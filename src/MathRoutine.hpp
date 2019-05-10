@@ -11,6 +11,7 @@
 #include <iostream>
 #include <stb_image.h>
 #include <stb_image_write.h>
+#include <fstream>
 
 namespace mathRoutine {
     constexpr float eps = 0.001;
@@ -203,7 +204,6 @@ namespace mathRoutine {
         size_t height = matrix.size();
         size_t width = matrix[0].size();
         Image normed = anorm(result);
-
         for(auto& i: normed){
             for(auto& j: i){
                 j /= r;
@@ -212,7 +212,6 @@ namespace mathRoutine {
                 }
             }
         }
-
         for (size_t i = 0; i < height; i++) {
             for (size_t j = 0; j < width; j++) {
                 for (auto &k: result[i][j]) {

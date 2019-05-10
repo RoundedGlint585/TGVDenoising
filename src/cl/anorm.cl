@@ -18,9 +18,9 @@ __kernel void anorm( const __global float *matrix,
         for (unsigned int i = 0; i < dim; i++) {
             normalized += (matrix[index + imageSize * i]*matrix[index + imageSize * i]);
         }
-        result[index] = sqrt(normalized)/r;
-//        if(result[index] < eps){
-//            result[index] = 1.f;
-//        }
+        result[index] = sqrt(normalized) / r;
+        if(result[index] < eps){
+            result[index] = 1.f;
+        }
     }
 }

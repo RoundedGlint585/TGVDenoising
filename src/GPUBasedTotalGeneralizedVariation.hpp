@@ -11,13 +11,13 @@
 #include <unordered_map>
 #include <stb_image.h>
 #include <stb_image_write.h>
-#include "../src/cl/common.hpp"
+#include "commonKernels.hpp"
 
 class GPUBasedTGV {
 public:
     GPUBasedTGV(size_t argc, char **argv, size_t amountOfImagesGPU);
 
-    void init(const std::string& path);
+    void init(const std::string& path, size_t amountOfImages);
 
     void start(size_t iterations, float tau, float lambda_tv, float lambda_tgv, float lambda_data);
 
@@ -26,7 +26,7 @@ public:
     std::vector<float> getImage();
 
 private:
-    std::tuple<size_t, size_t, int, int, std::vector<float>, std::vector<float>> loadImages(std::string_view path);
+    std::tuple<size_t, size_t, int, int, std::vector<float>, std::vector<float>> loadImages(std::string_view path, size_t amountOfImages);
 
     void initKernels();
 
@@ -68,7 +68,6 @@ private:
     };
     gpu::Device device;
     gpu::Context context;
-    size_t memsize;
     std::array<std::pair<size_t, gpu::gpu_mem_32f>, 13> memoryBuffers; //mapped from index
 
     ocl::Kernel tgvEpsilonKernel, tgvGradientKernel, tgvTranspondedEpsilonKernel, tgvTranspondedGradientKernel, tgvMulMatrixOnConstantKernel,
