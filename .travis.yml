@@ -24,6 +24,7 @@ before_install:
 install:
   - sudo bash .travis/install.sh;
 script:
+  - clinfo
   - cd "${TRAVIS_BUILD_DIR}"
   - export CC=gcc-8
   - export CXX=g++-8
