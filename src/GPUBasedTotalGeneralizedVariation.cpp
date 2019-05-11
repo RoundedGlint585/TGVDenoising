@@ -5,6 +5,7 @@
 #include "GPUBasedTotalGeneralizedVariation.hpp"
 #include <filesystem>
 #include <fstream>
+
 #define Debug
 
 GPUBasedTGV::GPUBasedTGV(size_t argc, char **argv, size_t amountOfImagesGPU) : amountOfImagesToGPU(amountOfImagesGPU) {
@@ -43,7 +44,7 @@ void GPUBasedTGV::initKernels() {
     tgvAnormKernel.compile();
 }
 
-void GPUBasedTGV::init(const std::string& path, size_t amountOfImages) {
+void GPUBasedTGV::init(const std::string &path, size_t amountOfImages) {
     initKernels();
     auto resultOfLoading = loadImages(path.c_str(), amountOfImages);
     loadData(observations, std::get<5>(resultOfLoading));
@@ -96,26 +97,26 @@ GPUBasedTGV::loadImages(std::string_view path, size_t amountOfImages) {
         totalAmountOfImages++;
         totalSize += width * height;
     }
-    if(totalAmountOfImages <= amountOfImages){
+    if (totalAmountOfImages <= amountOfImages) {
         return std::make_tuple(totalSize, totalAmountOfImages, width, height, image, observations);
-    }
-    else{
-        std::vector<float> selectedObservation =  std::vector(width*height*amountOfImages, 0.f);
+    } else {
+        std::vector<float> selectedObservation = std::vector(width * height * amountOfImages, 0.f);
         //SELECT IMAGES
-        for(size_t i = 0; i < height; i++){
-            for(size_t j = 0; j < width; j++){
+        for (size_t i = 0; i < height; i++) {
+            for (size_t j = 0; j < width; j++) {
                 std::vector<float> allForPixel;
-                for(size_t k = 0; k < totalAmountOfImages; k++){
-                    allForPixel.emplace_back(observations[j + i*width + k*width*height]);
+                for (size_t k = 0; k < totalAmountOfImages; k++) {
+                    allForPixel.emplace_back(observations[j + i * width + k * width * height]);
                 }
                 std::sort(allForPixel.begin(), allForPixel.end());
-                size_t left = (totalAmountOfImages - amountOfImages)/2;
-                for(size_t k = 0; k < amountOfImages; k++){
-                    selectedObservation[j + i*width + k*width*height] = allForPixel[k+left];
+                size_t left = (totalAmountOfImages - amountOfImages) / 2;
+                for (size_t k = 0; k < amountOfImages; k++) {
+                    selectedObservation[j + i * width + k * width * height] = allForPixel[k + left];
                 }
             }
         }
-        return std::make_tuple(amountOfImages*height*width, amountOfImages, width, height, image, selectedObservation);
+        return std::make_tuple(amountOfImages * height * width, amountOfImages, width, height, image,
+                               selectedObservation);
     }
 
 }
@@ -175,7 +176,7 @@ void GPUBasedTGV::start(size_t iterations, float tau, float lambda_tv, float lam
     result = getBuffer(image);
 }
 
-void GPUBasedTGV::writeResult(const std::string &name) {
+void GPUBasedTGV::writeImage(const std::string &name) {
     auto result = getBuffer(image);
     unsigned char *image = new unsigned char[result.size()];
     for (size_t i = 0; i < result.size(); i++) {
@@ -214,7 +215,8 @@ GPUBasedTGV::calculateImageDual(float tau_u, float lambda_tv, float tau, float l
                        memoryBuffers[histogram].second, memoryBuffers[transpondedGradient].second,
                        memoryBuffers[prox].second,
                        (unsigned int) width, (unsigned int) height,
-                       (unsigned int) memoryBuffers[image].first, (unsigned int) amountOfObservation, tau_u, lambda_data);
+                       (unsigned int) memoryBuffers[image].first, (unsigned int) amountOfObservation, tau_u,
+                       lambda_data);
     tgvCopyKernel.exec(workSize, memoryBuffers[transpondedGradient].second, memoryBuffers[imageDual].second,
                        (unsigned int) width, (unsigned int) height, 1,
                        (unsigned int) memoryBuffers[image].first);
@@ -381,34 +383,7 @@ void GPUBasedTGV::calculateQDual(float tau_q, float lambda_tgv, unsigned int wor
 
 void GPUBasedTGV::iteration(float tau, float lambda_tv, float lambda_tgv, float lambda_data, unsigned int workGroupSize,
                             unsigned int globalWorkSize) {
-#ifdef Debug
-    std::ofstream out("logGPU.txt", std::ios_base::app);
-    auto im = getBuffer(image);
-//    out << "Un" << std::endl;
-//    im = getBuffer(image);
-//    for(auto& i: im){
-//        float first = i;
-//        out << *reinterpret_cast<uint32_t * >(&first) << std::endl;
-//    }
-//    out << "Vn" << std::endl;
-//    im = getBuffer(v);
-//    for(auto& i: im){
-//        float first = i;
-//        out << *reinterpret_cast<uint32_t * >(&first) << std::endl;
-//    }
-//    out << "pn" << std::endl;
-//    im = getBuffer(p);
-//    for(auto& i: im){
-//        float first = i;
-//        out << *reinterpret_cast<uint32_t * >(&first) << std::endl;
-//    }
-//    out << "qnBefore" << std::endl;
-//    im = getBuffer(q);
-//    for(auto& i: im){
-//        float first = i;
-//        out << *reinterpret_cast<uint32_t * >(&first) << std::endl;
-//    }
-#endif
+
     float tau_u, tau_v, tau_p, tau_q;
     tau_u = tau;
     tau_v = tau;
@@ -435,50 +410,46 @@ void GPUBasedTGV::iteration(float tau, float lambda_tv, float lambda_tgv, float 
     /// Move to prev location
     tgvCopyKernel.exec(workSize,
                        memoryBuffers[imageDual].second,
-                       memoryBuffers[image].second, (unsigned int) width, (unsigned int) height, (unsigned int)1,
+                       memoryBuffers[image].second, (unsigned int) width, (unsigned int) height, (unsigned int) 1,
                        (unsigned int) memoryBuffers[image].first);
 
     tgvCopyKernel.exec(workSize,
                        memoryBuffers[vDual].second,
-                       memoryBuffers[v].second, (unsigned int) width, (unsigned int) height, (unsigned int)2,
+                       memoryBuffers[v].second, (unsigned int) width, (unsigned int) height, (unsigned int) 2,
                        (unsigned int) memoryBuffers[image].first);
 
     tgvCopyKernel.exec(workSize,
                        memoryBuffers[pDual].second,
-                       memoryBuffers[p].second, (unsigned int) width, (unsigned int) height, (unsigned int)2,
+                       memoryBuffers[p].second, (unsigned int) width, (unsigned int) height, (unsigned int) 2,
                        (unsigned int) memoryBuffers[image].first);
 
     tgvCopyKernel.exec(workSize,
                        memoryBuffers[qDual].second,
-                       memoryBuffers[q].second, (unsigned int) width, (unsigned int) height, (unsigned int)4,
+                       memoryBuffers[q].second, (unsigned int) width, (unsigned int) height, (unsigned int) 4,
                        (unsigned int) memoryBuffers[image].first);
-#ifdef Debug
-//    out << "Un" << std::endl;
-//    im = getBuffer(image);
-//    for(auto& i: im){
-//        float first = i;
-//        out << *reinterpret_cast<uint32_t * >(&first) << std::endl;
-//    }
-//    out << "Vn" << std::endl;
-//    im = getBuffer(v);
-//    for(auto& i: im){
-//        float first = i;
-//        out << *reinterpret_cast<uint32_t * >(&first) << std::endl;
-//    }
-//    out << "pn" << std::endl;
-//    im = getBuffer(p);
-//    for(auto& i: im){
-//        float first = i;
-//        out << *reinterpret_cast<uint32_t * >(&first) << std::endl;
-//    }
-//    out << "qnAfter" << std::endl;
-//    im = getBuffer(q);
-//    for(auto& i: im){
-//        float first = i;
-//        out << *reinterpret_cast<uint32_t * >(&first) << std::endl;
-//    }
-#endif
-    ///
+}
 
-
+void GPUBasedTGV::writePly(const std::string &name) {
+    std::ofstream out(name.c_str());
+    out << "ply" << std::endl << "format ascii 1.0" << std::endl;
+    out << "element vertex " << height*width << std::endl;
+    out << "property float x" << std::endl << "property float y" << std::endl << "property float z" << std::endl;
+    out << "element face " << ((height-1)*(width-1)*2) << std::endl;
+    out << "property list uint8 int32 vertex_indices" << std::endl << "end_header" << std::endl;
+    auto result = getBuffer(image);
+    for(size_t i = 0; i < height; i++){
+        for(size_t j = 0; j < width; j++){
+            out << i << " " << j << " " << (size_t)result[j+i*width] << std::endl;
+        }
+    }
+    for(size_t i = 0; i < height-1; i++){
+        for(size_t j = 0; j < width-1; j++){
+            auto a = j + i*width;
+            auto b = j+1 +i*width;
+            auto c = j+width+i*width;
+            auto d  = j + width+1 + i*width;
+            out << "3 " << (int) a << " " << (int) b << " " << (int) c << std::endl;
+            out << "3 " << (int) c << " " << (int) b << " " << (int) d << std::endl;
+        }
+    }
 }

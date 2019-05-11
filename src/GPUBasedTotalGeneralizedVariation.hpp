@@ -21,7 +21,9 @@ public:
 
     void start(size_t iterations, float tau, float lambda_tv, float lambda_tgv, float lambda_data);
 
-    void writeResult(const std::string &name);
+    void writeImage(const std::string &name);
+
+    void writePly(const std::string& name);
 
     std::vector<float> getImage();
 
@@ -51,6 +53,7 @@ private:
     void calculateQDual(float tau_q, float lambda_tgv, unsigned int workGroupSize,
                         unsigned int globalWorkSize);
 
+    
     enum bufIndex {
         image,
         v,

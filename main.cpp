@@ -4,7 +4,7 @@
 #include <iostream>
 #include <filesystem>
 #include <time.h>
-#define CPU
+//#define CPU
 
 
 #ifdef CPU
@@ -68,7 +68,8 @@ void checkGPU(int argc, char **argv, size_t iterations, size_t amountOfImages) {
     auto worker = GPUBasedTGV(argc, argv, 10);
     worker.init("data", amountOfImages);
     worker.start(iterations, tau, lambda_tv, lambda_tgv, lambda_data);
-    worker.writeResult("result.png");
+    worker.writeImage("result.png");
+    worker.writePly("result.ply");
 }
 
 #endif
@@ -78,7 +79,7 @@ int main(int argc, char **argv) {
 #ifdef CPU
     checkNonGPU(1000);
 #else
-    checkGPU(argc, argv, 1000, 10); //DOES NOT WORK FOR NOW
+    checkGPU(argc, argv, 0, 10); //DOES NOT WORK FOR NOW
 #endif
 
     return 0;
