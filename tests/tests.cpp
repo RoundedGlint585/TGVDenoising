@@ -191,7 +191,7 @@ protected:
         context.init(device.device_id_opencl);
         context.activate();
         char **arg = (char **) calloc(2, sizeof(char *));
-        arg[1] = (char *) "0";
+        arg[1] = (char *) "1";
         device = gpu::chooseGPUDevice(2, arg);
         imageBuf.resizeN(image.size());
         imageBuf.writeN(image.data(), image.size());
