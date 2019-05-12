@@ -226,8 +226,6 @@ protected:
 
     std::vector<float> getImagesFromPathPlain(const std::string &path) {
         using namespace std::filesystem;
-        size_t totalSize = 0;
-        size_t amountOfImages = 0;
         int width, height;
         int channels;
         std::vector<float> observations;

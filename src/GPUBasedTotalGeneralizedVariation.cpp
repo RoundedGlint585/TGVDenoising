@@ -172,7 +172,6 @@ void GPUBasedTGV::start(size_t iterations, float tau, float lambda_tv, float lam
         }
         iteration(tau, lambda_tv, lambda_tgv, lambda_data, workGroupSize, globalWorkSize);
     }
-    result = getBuffer(image);
 }
 
 void GPUBasedTGV::writeImage(const std::string &name) {
@@ -260,7 +259,6 @@ void GPUBasedTGV::calculateVDual(float tau_v, float lambda_tgv, float lambda_tv,
 
 void GPUBasedTGV::calculatePDual(float tau_p, float lambda_tv, unsigned int workGroupSize,
                                  unsigned int globalWorkSize) {
-    //p + (tau_p * lambda_tv) * ( mathRoutine::calculateGradient(2 * un + (-1)* u) + (-1)* (2 * vn +(-1)* v))
     //project(p + (tau_p * lambda_tv) * (mathRoutine::calculateGradient((-1) * ((-2) * un + u)) +  ((-2) * vn +  v)), lambda_tv);
     auto workSize = gpu::WorkSize(workGroupSize, globalWorkSize);
     //Копируем imageDual в transpondedGradient
@@ -268,50 +266,50 @@ void GPUBasedTGV::calculatePDual(float tau_p, float lambda_tv, unsigned int work
                        memoryBuffers[imageDual].second, //temporary copy p to multiply on lambda_tv
                        memoryBuffers[transpondedGradient].second, (unsigned int) width, (unsigned int) height, 1,
                        (unsigned int) memoryBuffers[image].first);
-    //Умножаем на -2 (-2 * un)
+    //Mul un on (-2) = (-2 * un)
     tgvMulMatrixOnConstantKernel.exec(workSize,
                                       memoryBuffers[transpondedGradient].second, -2.f,
                                       (unsigned int) width, (unsigned int) height, 1,
                                       (unsigned int) memoryBuffers[image].first);
-    //Добавляем Image (-2*un)+u
+    //Add Image  = (-2*un)+u
     tgvSumOfMatrixKernel.exec(workSize, memoryBuffers[transpondedGradient].second,
                               memoryBuffers[image].second, (unsigned int) width, (unsigned int) height, 1,
                               (unsigned int) memoryBuffers[image].first);
-    //Умножаем на -1 ((-1) * ((-2) * un + u))
+    //Mul on-1 =  ((-1) * ((-2) * un + u))
     tgvMulMatrixOnConstantKernel.exec(workSize,
                                       memoryBuffers[transpondedGradient].second, -1.f,
                                       (unsigned int) width, (unsigned int) height, 1,
                                       (unsigned int) memoryBuffers[image].first);
-    //Считаем градиент пишем в transpondedEpsilon mathRoutine::calculateGradient((-1) * ((-2) * un + u))
+    //calculate gradient and write down into transpondedEpsilon = mathRoutine::calculateGradient((-1) * ((-2) * un + u))
     tgvGradientKernel.exec(workSize,
                            memoryBuffers[transpondedGradient].second,
                            memoryBuffers[transpondedEpsilon].second, (unsigned int) width, (unsigned int) height,
                            (unsigned int) memoryBuffers[image].first);
-    //Копируем vn в pn
+    //Copy vn into pn
     tgvCopyKernel.exec(workSize,
                        memoryBuffers[vDual].second, //temporary copy p to multiply on lambda_tv
                        memoryBuffers[pDual].second, (unsigned int) width, (unsigned int) height, 2,
                        (unsigned int) memoryBuffers[image].first);
-    //Умножаем на -2 ((-2) * vn)
+    //Mul on -2  = ((-2) * vn)
     tgvMulMatrixOnConstantKernel.exec(workSize,
                                       memoryBuffers[pDual].second, -2.f,
                                       (unsigned int) width, (unsigned int) height, 2,
                                       (unsigned int) memoryBuffers[image].first);
-    //добавим v ((-2) * vn + v))
+    //Add v =  ((-2) * vn + v))
     tgvSumOfMatrixKernel.exec(workSize, memoryBuffers[pDual].second,
                               memoryBuffers[v].second, (unsigned int) width, (unsigned int) height, 2,
                               (unsigned int) memoryBuffers[image].first);
-    //сложим (mathRoutine::calculateGradient((-1) * ((-2) * un + u)) +  ((-2) * vn +  v))
+    //add (mathRoutine::calculateGradient((-1) * ((-2) * un + u)) to  ((-2) * vn +  v))
     tgvSumOfMatrixKernel.exec(workSize, memoryBuffers[pDual].second,
                               memoryBuffers[transpondedEpsilon].second, (unsigned int) width, (unsigned int) height, 2,
                               (unsigned int) memoryBuffers[image].first);
-    //умножим на tau_p *lambda_tv(tau_p * (lambda_tv * ((-1)* mathRoutine::calculateGradient(2 * un +  u) + ((-2) * vn + v))))
+    //Mul on  tau_p *lambda_tv = (tau_p * (lambda_tv * ((-1)* mathRoutine::calculateGradient(2 * un +  u) + ((-2) * vn + v))))
 
     tgvMulMatrixOnConstantKernel.exec(workSize,
                                       memoryBuffers[pDual].second, tau_p * lambda_tv,
                                       (unsigned int) width, (unsigned int) height, 2,
                                       (unsigned int) memoryBuffers[image].first);
-    //добавим p
+    //Add p
     tgvSumOfMatrixKernel.exec(workSize, memoryBuffers[pDual].second,
                               memoryBuffers[p].second, (unsigned int) width, (unsigned int) height, 2,
                               (unsigned int) memoryBuffers[image].first);
