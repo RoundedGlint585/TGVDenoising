@@ -3,7 +3,7 @@
 //
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
-//TODO: Refactoring
+
 #include <filesystem>
 #include <gtest/gtest.h>
 #include <libutils/misc.h>
@@ -16,11 +16,11 @@
 
 class imageTest : public ::testing::Test {
 protected:
-    void SetUp() {
+    void SetUp() override {
 
     }
 
-    void TearDown() {
+    void TearDown() override {
 
     }
 
@@ -187,7 +187,7 @@ TEST_F(imageTest, sumOfImages) {
 
 class GPUImageTest : public ::testing::Test {
 protected:
-    void SetUp() {
+    void SetUp() override {
         char **arg = (char **) calloc(2, sizeof(char *));
         arg[1] = (char *) "0";
         device = gpu::chooseGPUDevice(2, arg);
@@ -197,7 +197,7 @@ protected:
         imageBuf.writeN(image.data(), image.size());
     }
 
-    void TearDown() {
+    void TearDown() override {
 
     }
 
@@ -209,14 +209,14 @@ protected:
             std::cout << "loading image: " << p << std::endl;
             std::string name = p.path();
             int width, height, channels;
-            unsigned char *image = stbi_load(name.c_str(),
+            unsigned char *loadedImage = stbi_load(name.c_str(),
                                              &width,
                                              &height,
                                              &channels,
                                              STBI_grey);
-            mathRoutine::Image imageRes = mathRoutine::createImageFromUnsignedCharArray(image, width, height);
+            mathRoutine::Image imageRes = mathRoutine::createImageFromUnsignedCharArray(loadedImage, width, height);
             result.emplace_back(imageRes);
-            stbi_image_free(image);
+            stbi_image_free(loadedImage);
         }
         return result;
     }
@@ -276,11 +276,6 @@ protected:
                                                         {{-60.f,  -60.f},  {-165.f, -165.f}, {776.f,  -203.f}, {-776.f, 18.f},   {195.f, -4.f}},
                                                         {{-180.f, -180.f}, {-203.f, 581.f},  {997.f,  798.f},  {-798.f, -991.f}, {199.f, 197.f}},
                                                         {{386.f,  0},      {14.f,   -195.f}, {-792.f, -199.f}, {390.f,  197.f},  {2.f,   0}}};
-    mathRoutine::Gradient correctProjectedGradient = {{{0,         0},         {0,         2.f},       {0,        0},        {0,         0},         {0, 0},},
-                                                      {{1.41421f,  1.41421f},  {-1.41421f, -1.41421f}, {0,        0},        {0,         2.f},       {0, 0},},
-                                                      {{-1.41421f, -1.41421f}, {0,         0},         {2.f,      0},        {-1.99958f, 0.041017f}, {0, 0},},
-                                                      {{0,         0},         {0,         2.f},       {1.41421f, 1.41421f}, {-1.42134f, -1.40705f}, {0, 0},},
-                                                      {{2.f,       0},         {2.f,       0},         {-2.f,     0},        {-2.f,      0},         {0, 0},}};
     unsigned int workGroupSize = 128;
     unsigned int globalWorkSize = (image.size() + workGroupSize - 1) / workGroupSize * workGroupSize;
     gpu::WorkSize workSize = gpu::WorkSize(workGroupSize, globalWorkSize);
@@ -293,13 +288,8 @@ protected:
     ocl::Kernel tgvProjectedKernel = ocl::Kernel(project_kernel, project_kernel_length, "project");
     ocl::Kernel tgvCalculateHist = ocl::Kernel(calculate_hist_kernel, calculate_hist_kernel_length, "calculateHist");
     ocl::Kernel tgvAnormKernel = ocl::Kernel(anorm_kernel, anorm_kernel_length, "anorm");
-    ocl::Kernel tgvProxKernel = ocl::Kernel(prox_kernel, prox_kernel_length, "prox");
-    ocl::Kernel sqrtKernel = ocl::Kernel(sqrt_kernel, sqrt_kernel_length, "sqrtCalc");
     gpu::gpu_mem_32f imageBuf;
-    float tau = 1 / (sqrtf(8)) / 4 / 8;
     float lambda_data = 1.0;
-    float lambda_tv = 1.0 / lambda_data;
-    float lambda_tgv = 1.0 / lambda_data;
 
 };
 
@@ -331,7 +321,8 @@ TEST_F(GPUImageTest, gpuProjectOfMatrixTest) {
             for (size_t k = 0; k < projected[i][j].size(); k++) {
                 float first = projected[i][j][k];
                 float second = result[j + i * projected[i].size() + k * image.size()];
-                ASSERT_NEAR(*reinterpret_cast<uint32_t * >(&first), *reinterpret_cast<uint32_t * >(&second), 3); // OpenCL provide presicion to 3 ulp on IEEE standart
+                ASSERT_NEAR(*reinterpret_cast<uint32_t * >(&first), *reinterpret_cast<uint32_t * >(&second),
+                            3); // OpenCL provide presicion to 3 ulp on IEEE standart
             }
         }
     }
@@ -357,27 +348,27 @@ TEST_F(GPUImageTest, gpuCalculateGradient) {
     }
 }
 
-TEST_F(GPUImageTest, gpuCalculateTranspondedGradient) {
-    gpu::gpu_mem_32f gradientBuf;
-    gradientBuf.resizeN(2 * image.size());
-    tgvGradientKernel.compile();
-    tgvTranspondedGradientKernel.compile();
-    tgvGradientKernel.exec(workSize, imageBuf, gradientBuf, (unsigned int) imageInMatrix.size(),
-                           (unsigned int) imageInMatrix[0].size(),
-                           (unsigned int) image.size());
-
-    tgvTranspondedGradientKernel.exec(workSize, gradientBuf, imageBuf,
-                                      (unsigned int) imageInMatrix.size(), (unsigned int) imageInMatrix[0].size(),
-                                      (unsigned int) image.size());
-    std::vector<float> result(image.size(), 0.f);
-    imageBuf.readN(result.data(), image.size());
-    for (size_t i = 0; i < correctTranspondedGradient.size(); i++) {
-        for (size_t j = 0; j < correctTranspondedGradient[0].size(); j++) {
-            ASSERT_NEAR(result[j + i * correctTranspondedGradient[0].size()], correctTranspondedGradient[i][j],
-                        mathRoutine::eps);
-        }
-    }
-}
+//TEST_F(GPUImageTest, gpuCalculateTranspondedGradient) {
+//    gpu::gpu_mem_32f gradientBuf;
+//    gradientBuf.resizeN(2 * image.size());
+//    tgvGradientKernel.compile();
+//    tgvTranspondedGradientKernel.compile();
+//    tgvGradientKernel.exec(workSize, imageBuf, gradientBuf, (unsigned int) imageInMatrix.size(),
+//                           (unsigned int) imageInMatrix[0].size(),
+//                           (unsigned int) image.size());
+//
+//    tgvTranspondedGradientKernel.exec(workSize, gradientBuf, imageBuf,
+//                                      (unsigned int) imageInMatrix.size(), (unsigned int) imageInMatrix[0].size(),
+//                                      (unsigned int) image.size());
+//    std::vector<float> result(image.size(), 0.f);
+//    imageBuf.readN(result.data(), image.size());
+//    for (size_t i = 0; i < correctTranspondedGradient.size(); i++) {
+//        for (size_t j = 0; j < correctTranspondedGradient[0].size(); j++) {
+//            ASSERT_NEAR(result[j + i * correctTranspondedGradient[0].size()], correctTranspondedGradient[i][j],
+//                        mathRoutine::eps);
+//        }
+//    }
+//}
 
 TEST_F(GPUImageTest, gpuCalculateEpsilon) {
     gpu::gpu_mem_32f gradientBuf;
@@ -483,4 +474,3 @@ TEST_F(GPUImageTest, gpuHistsTest) {
 }
 
 
-//////TODO: Tests for GPU Version
