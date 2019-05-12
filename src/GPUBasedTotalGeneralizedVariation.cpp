@@ -141,7 +141,6 @@ std::vector<float> GPUBasedTGV::getBuffer(size_t name) const {
 }
 
 void GPUBasedTGV::start(size_t iterations, float tau, float lambda_tv, float lambda_tgv, float lambda_data) {
-    std::vector<float> result = getBuffer(image);
     unsigned int workGroupSize = 128;
     std::cout << "Image size: " << memoryBuffers[image].first << std::endl;
     unsigned int globalWorkSize = (memoryBuffers[image].first + workGroupSize - 1) / workGroupSize * workGroupSize;
