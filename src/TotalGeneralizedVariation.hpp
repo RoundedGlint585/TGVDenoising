@@ -25,8 +25,10 @@ public:
 
     explicit TotalGeneralizedVariation(std::vector<Image> &&);
 
-    Image solve(float tau, float lambda_tv, float lambda_tgv, float lambda_data, size_t iterations = 1000);
+    void iteration(float tau, float lambda_tv, float lambda_tgv,
+                   float lambda_data);
 
+    Image getImage() const;
 private:
     //math routine
 
@@ -34,11 +36,10 @@ private:
 
     Image prox(const Image &image, float tau, float lambda_data);
 
-    void tgvIteration(Image &u, Gradient &v, Gradient &p, Epsilon &q, float tau, float lambda_tv, float lambda_tgv,
-                      float lambda_data);
+
 
     //
-    void initGradientAndEpsilon();
+    void init();
 
     void initWs();
 
@@ -50,10 +51,8 @@ private:
     Image m_result;
     size_t m_width;
     size_t m_height;
-    Gradient m_gradient;
-    Image m_transpondedGradient;
-    Epsilon m_epsilon;
-    Gradient m_transpondedEpsilon;
+    Gradient p,v;
+    Epsilon q;
 
 
 };

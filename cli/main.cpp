@@ -38,7 +38,15 @@ void CPU(size_t iterations, const std::string& path, const std::string& resultFi
     float lambda_tgv = 1.0;
     lambda_tv /= lambda_data;
     lambda_tgv /= lambda_data;
-    mathRoutine::Image result = variation.solve(tau, lambda_tv, lambda_tgv, lambda_data, iterations);
+    for(size_t i = 0; i < iterations; i++) {
+        if(i % 100 == 0){
+            std::cout << "\rIteration # " << i << " out of " << iterations;
+            std::cout.flush();
+        }
+        variation.iteration(tau, lambda_tv, lambda_tgv, lambda_data);
+    }
+    std::cout << std::endl;
+    mathRoutine::Image result = variation.getImage();
     mathRoutine::writeImage(result, resultFileName + ".png");
 }
 
@@ -95,7 +103,7 @@ int main(int argc, char **argv) {
         std::cout << "Using GPU" << std::endl;
         std::cout << "Amount of iterations: " <<  result["n"].as<size_t>() << std::endl;
         GPU(argc, (char*)result["a"].as<std::string>().c_str(), result["n"].as<size_t>(), result["i"].as<size_t>(), result["p"].as<std::string>(), result["r"].as<std::string>()); //DOES NOT WORK FOR NOW
-        std::cout << "Result wrote as: " <<result["r"].as<std::string>() <<".png and " << result["r"].as<std::string>() << ".ply" << std::endl;
+        std::cout << "Result saved as: " <<result["r"].as<std::string>() <<".png and " << result["r"].as<std::string>() << ".ply" << std::endl;
     }
 
 
