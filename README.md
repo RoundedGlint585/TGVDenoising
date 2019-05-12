@@ -9,14 +9,15 @@ To add
 
 ## Platforms ##
 
-  * Linux
-  
+  * Linux (Tested)
+    
 ### Requirements
 
 These are the base requirements to build
 
   * Cmake
   * A C++17-standard-compliant compiler
+  * For GPU version you actually need something, that support OpenCL 1.2 (so basically its not always GPU)
 
 ## Installing 
 
@@ -36,16 +37,26 @@ Compile with Cmake flag -D BUILD_RELEASE:BOOL=false
   cmake --build .
 ```
 
-## To see results
+## How to use
 
-As far it is not completed work, you can checkout partially result.
-Clone code, build release (mkdir build && cd build && cmake .. && cmake --build .)
+Current solution based on command line interface with keys
 
-Add folder "data" with photos(or use "data" from this repository) and start it  
-Binary should be in the same place with folder "data" . 
+| Key                  | Purpose                                 | Default Value |
+| :------------------- | :-------------------------------------- | :------------ |
+| -c                   | Use CPU                                 | False         |
+| -g                   | Use GPU                                 | True          |
+| -n  \<Num\>          | Amount of Iterations                    | 1000          |
+| -p  \<Folder Path\>  | Path to folder with data                | data          |
+| -a \<Num\>           | Index of gpu if there are a more than 1 | 0             |
+| -r \<File name\>     | Name of the result file                 | result        |
+| -i \<Num\>           | amount of images for GPU                | 10            |
+   
+So just start program with these keys
 
-After 4000 iterations from data/* pictures you will get result.png
+###Examples
+./TGV -g -n 400 -p "data" -a "0" -r "resultFileName" -i 14
 
+./TGV -p "data" -a "0" -r "DenoisedImage" -i 6
 ## Authors
 
 * **Daniil Smolyakov** - *Initial work and CPU based code* - [DanonOfficial](https://github.com/DanonOfficial)
