@@ -3,7 +3,9 @@
 //
 
 #include "TotalGeneralizedVariation.hpp"
+#include <fstream>
 
+#define Debug
 
 TotalGeneralizedVariation::TotalGeneralizedVariation(const std::vector<TotalGeneralizedVariation::Image> &images)
         : m_images(images), m_result(m_images[0]), m_width(m_result[0].size()), m_height(m_result.size()) {
@@ -54,14 +56,16 @@ void TotalGeneralizedVariation::calculateHist() {
             for (size_t i = 0; i < m_height; i++) {
                 for (size_t j = 0; j < m_width; j++) {
                     if (m_images[histNum][i][j] > image[i][j]) {
-                        Ws[histNum][i][j]++;
+                        Ws[histNum][i][j] += 1.f;
                     } else {
-                        Ws[histNum][i][j]--;
+                        if (m_images[histNum][i][j] < image[i][j])
+                            Ws[histNum][i][j] -= 1.f;
                     }
                 }
             }
         }
     }
+
 }
 
 
@@ -79,15 +83,16 @@ TotalGeneralizedVariation::prox(const TotalGeneralizedVariation::Image &image, f
             }
         }
     }
+
     for (size_t i = 0; i < m_height; i++) {
         for (size_t j = 0; j < m_width; j++) {
             std::stable_sort(stacked[i][j].begin(), stacked[i][j].end());
 
-            if (Ws.size() % 2 == 1) {
+            if (stacked[i][j].size() % 2 == 1) {
                 result[i][j] = stacked[i][j][stacked[i][j].size() / 2 + 1];
             } else {
                 result[i][j] =
-                        (stacked[i][j][stacked[i][j].size() / 2 + 1] + stacked[i][j][stacked[i][j].size() / 2]) / 2;
+                        (stacked[i][j][stacked[i][j].size() / 2] + stacked[i][j][stacked[i][j].size() / 2 - 1]) / 2;
             }
         }
     }
@@ -102,15 +107,17 @@ TotalGeneralizedVariation::solve(float tau, float lambda_tv, float lambda_tgv, f
     Gradient v = mathRoutine::calculateGradient(m_result);
     Gradient p = mathRoutine::calculateGradient(m_result);
     Epsilon q = mathRoutine::calculateEpsilon(v);
+
     for (size_t i = 0; i < iterations; i++) {
-        std::cout << "Iteration #: " << i << std::endl;
+        if (i % 100 == 0) { std::cout << "Iteration #: " << i << std::endl; }
+
         tgvIteration(u, v, p, q, tau, lambda_tv, lambda_tgv, lambda_data);
     }
     return u;
 }
 
 
-void TotalGeneralizedVariation::tgvIteration(Image &u, Gradient &v, Gradient &p, Epsilon q, float tau, float lambda_tv,
+void TotalGeneralizedVariation::tgvIteration(Image &u, Gradient &v, Gradient &p, Epsilon &q, float tau, float lambda_tv,
                                              float lambda_tgv, float lambda_data) {
     using namespace mathRoutine;
     float tau_u, tau_v, tau_p, tau_q;
@@ -118,17 +125,19 @@ void TotalGeneralizedVariation::tgvIteration(Image &u, Gradient &v, Gradient &p,
     tau_v = tau;
     tau_p = tau;
     tau_q = tau;
-    Image un = prox(u + (-tau_u) * lambda_tv * (mathRoutine::calculateTranspondedGradient(p)), tau_u, lambda_data);
-    Gradient vn = v + tau_v * (lambda_tgv * ((-1) * (mathRoutine::calculateTranspondedEpsilon(q))) + lambda_tv * p);
-    Gradient pn = project(
-            p + tau_p *
-                (lambda_tv * (mathRoutine::calculateGradient((2 * un) + ((-1) * u)) + (-1) * ((2 * vn) + ((-1) * v)))),
-            lambda_tv);
-    Epsilon qn = project(q + tau_q * lambda_tgv * mathRoutine::calculateEpsilon(2 * vn + ((-1) * v)), lambda_tgv);
+    Image un = prox(u + (-tau_u * lambda_tv) * (mathRoutine::calculateTranspondedGradient(p)), tau_u, lambda_data);
 
+    Gradient vn = v + (-lambda_tgv * tau_v) * mathRoutine::calculateTranspondedEpsilon(q) + (tau_v * lambda_tv) * p;
+
+    Gradient pn = project(
+            p + (tau_p * lambda_tv) * (mathRoutine::calculateGradient((-1) * ((-2) * un + u)) + ((-2) * vn + v)),
+            lambda_tv);
+
+    Epsilon qn = project(q + (-tau_q * lambda_tgv) * mathRoutine::calculateEpsilon(-2 * vn + v), lambda_tgv);
     u = std::move(un);
     v = std::move(vn);
     p = std::move(pn);
     q = std::move(qn);
+
 
 }

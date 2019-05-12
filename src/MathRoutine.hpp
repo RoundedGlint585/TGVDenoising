@@ -9,8 +9,8 @@
 #include <array>
 #include <cmath>
 #include <iostream>
-#include <stb_image.h>
-#include <stb_image_write.h>
+#include "StbInterfaceProxy.hpp"
+#include <fstream>
 
 namespace mathRoutine {
     constexpr float eps = 0.001;
@@ -143,7 +143,7 @@ namespace mathRoutine {
         }
         for (size_t i = 0; i < height; i++) {
             for (size_t j = 0; j < width - 1; j++) {
-                result[i][j + 1] += gradient[i][j][0];
+                result[i][j + 1] += gradient[i][j][0]; //result[2,2] += gradient[2,1]
             }
         }
         for (size_t i = 0; i < height - 1; i++) {
@@ -187,18 +187,11 @@ namespace mathRoutine {
         size_t height = matrix.size();
         size_t width = matrix[0].size();
         for (size_t i = 0; i < height; i++) {
-            result.resize(width);
-        }
-        for (size_t i = 0; i < height; i++) {
             for (size_t j = 0; j < width; j++) {
                 for (auto &k: matrix[i][j]) {
                     result[i][j] += k * k;
                 }
-            }
-        }
-        for (auto &i: result) {
-            for (auto &j: i) {
-                j = sqrtf(j);
+                result[i][j] = sqrtf(result[i][j]);
             }
         }
         return result;
@@ -209,12 +202,12 @@ namespace mathRoutine {
         Matrix result = matrix;
         size_t height = matrix.size();
         size_t width = matrix[0].size();
-        Image normed = anorm(matrix);
-        for (auto &i: normed) { // normilized on r, if zero setted as 1
-            for (auto &j : i) {
+        Image normed = anorm(result);
+        for(auto& i: normed){
+            for(auto& j: i){
                 j /= r;
-                if (j < eps) {
-                    j = 1;
+                if(j < eps){
+                    j = 1.f;
                 }
             }
         }

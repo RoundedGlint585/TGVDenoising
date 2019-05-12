@@ -6,48 +6,30 @@
 
 #line 6
 
-void calculateGradient(__global float *image, __global float *v, unsigned int width, unsigned int height) {
-    const unsigned int index = get_global_id(0);
+///Layout for gradient: dx_0...dx_n dy_0...dy_n
 
-    unsigned int imageSize = width * height;
-    if (index % width == (width - 1)) {
+
+void calculateGradient(__global float *image, __global float *v, int width, int height) {
+    const int index = get_global_id(0);
+    int imageSize = width * height;
+    if ((index % width) == (width - 1)) { //border on width
         v[index] = 0;
     } else {
-        v[index] = image[index] - image[index - 1];
+        v[index] = image[index + 1] - image[index];
     }
-    if (index / width == height - 1) {
+    if (index / width == (height - 1)) { //border on height
         v[index + imageSize] = 0;
     } else {
-        v[index + imageSize] = image[index] - image[index + width];
+        v[index + imageSize] = image[index + width] - image[index];
     }
-}
-
-
-void calculateTranspondedGradient(__global float *gradient, __global float *transpondedGradient, unsigned int width,
-                                  unsigned int height) {
-    const unsigned int index = get_global_id(0);
-    unsigned int imageSize = width * height;
-    transpondedGradient[index] = (-gradient[index]);
-    transpondedGradient[index] -= gradient[index + imageSize];
-    if (index % width != (width - 1)) {
-        transpondedGradient[index + 1] += gradient[index];
-    }
-    if (index / width != (height - 1)) {
-        transpondedGradient[index + width] += gradient[index + imageSize];
-    }
-
 }
 
 __kernel void gradient(__global float *image,
                        __global float *gradient,
-                       unsigned int width, unsigned int height,
-                       unsigned int n) {
+                       int width, int height,
+                       int n) { //n - sizeof image
     const unsigned int index = get_global_id(0);
-    if (index <= n) {
+    if (index < n) {
         calculateGradient(image, gradient, width, height);
-        //copyFromTo(v, p, width * height, 2);
-        //calculateTranspondedGradient(v, transpondedGradient, width, height);
     }
-
-
 }

@@ -570,7 +570,7 @@ OpenCLKernel *KernelSource::getKernel(const std::shared_ptr<OpenCLEngine> &cl, b
 			options += " -x spir";
 		}
 
-		options += " -D WARP_SIZE=" + to_string(cl->wavefrontSize());
+		options += " -D WARP_SIZE=" + to_string(cl->wavefrontSize()); //added corrected sqrt
 
 		timer tm;
 		tm.start();
