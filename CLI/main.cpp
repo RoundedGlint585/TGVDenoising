@@ -81,11 +81,15 @@ int main(int argc, char **argv) {
 
     if (result["c"].as<bool>()) {
         std::cout << "Using CPU" << std::endl;
+        std::cout << "Amount of iterations: " <<  result["n"].as<size_t>() << std::endl;
         CPU(result["n"].as<size_t>(), result["p"].as<std::string>(), result["r"].as<std::string>());
     } else {
         std::cout << "Using GPU" << std::endl;
+        std::cout << "Amount of iterations: " <<  result["n"].as<size_t>() << std::endl;
         GPU(argc, (char*)result["a"].as<std::string>().c_str(), result["n"].as<size_t>(), result["i"].as<size_t>(), result["p"].as<std::string>(), result["r"].as<std::string>()); //DOES NOT WORK FOR NOW
+        std::cout << "Result wrote as: " <<result["r"].as<std::string>() <<".png and " << result["r"].as<std::string>() << ".ply" << std::endl;
     }
+
 
     return 0;
 }

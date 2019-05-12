@@ -44,6 +44,7 @@ void GPUBasedTGV::initKernels() {
     tgvAnormKernel.compile();
 }
 
+
 void GPUBasedTGV::init(const std::string &path, size_t amountOfImages) {
     initKernels();
     auto resultOfLoading = loadImages(path.c_str(), amountOfImages);
@@ -165,8 +166,6 @@ void GPUBasedTGV::start(size_t iterations, float tau, float lambda_tv, float lam
                                 memoryBuffers[histogram].second, (unsigned int) width, (unsigned int) height,
                                 (unsigned int) memoryBuffers[image].first, (unsigned int) amountOfObservation);
     auto hist = getBuffer(histogram);
-    ///
-    std::ofstream out("logGPU.txt");
     for (size_t i = 0; i < iterations; i++) {
         if (i % 100 == 0) {
             std::cout << "Iteration #: " << i << std::endl;
