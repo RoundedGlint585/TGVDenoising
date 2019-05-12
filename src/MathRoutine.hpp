@@ -9,8 +9,7 @@
 #include <array>
 #include <cmath>
 #include <iostream>
-#include <stb_image.h>
-#include <stb_image_write.h>
+#include "StbInterfaceProxy.hpp"
 #include <fstream>
 
 namespace mathRoutine {

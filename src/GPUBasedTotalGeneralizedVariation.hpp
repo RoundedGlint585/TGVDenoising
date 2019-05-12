@@ -9,8 +9,7 @@
 #include <libgpu/context.h>
 #include <libgpu/shared_device_buffer.h>
 #include <unordered_map>
-#include <stb_image.h>
-#include <stb_image_write.h>
+#include "StbInterfaceProxy.hpp"
 #include "commonKernels.hpp"
 
 class GPUBasedTGV {

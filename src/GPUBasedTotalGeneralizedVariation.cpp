@@ -231,20 +231,6 @@ void GPUBasedTGV::calculateVDual(float tau_v, float lambda_tgv, float lambda_tv,
                                      memoryBuffers[transpondedEpsilon].second, (unsigned int) width,
                                      (unsigned int) height,
                                      (unsigned int) memoryBuffers[image].first);
-//    std::ofstream out("logGPU.txt", std::ios_base::app);
-//    out << "q" << std::endl;
-//    auto im = getBuffer(q);
-//    for(auto& i: im){
-//        float first = i;
-//        out << *reinterpret_cast<uint32_t * >(&first) << std::endl;
-//    }
-//    out << "TranspondedEpsilon(q)" << std::endl;
-//    im = getBuffer(transpondedEpsilon);
-//    for(auto& i: im){
-//        float first = i;
-//        out << *reinterpret_cast<uint32_t * >(&first) << std::endl;
-//    }
-//    //(-lambda_tgv *tau_v) * mathRoutine::calculateTranspondedEpsilon(q)
     tgvMulMatrixOnConstantKernel.exec(workSize,
                                       memoryBuffers[transpondedEpsilon].second, (-tau_v * lambda_tgv),
                                       (unsigned int) width, (unsigned int) height, 2,

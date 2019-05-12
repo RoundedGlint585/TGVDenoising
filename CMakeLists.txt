@@ -10,7 +10,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}\
 add_subdirectory(third-party)
 
 
-if(false)
+if(${BUILD_RELEASE})
     set(CMAKE_BUILD_TYPE Release)
     # convertIntoHeader CMake-функция объявлена в libs/gpu/CMakeLists.txt:71
     # Она считывает все байты из файла src/cl/aplusb.cl (т.е. весь исходный код кернела) и преобразует их в массив байтов в файле src/cl/aplusb_cl.h aplusb_kernel
@@ -28,10 +28,10 @@ if(false)
     convertIntoHeader(src/cl/anorm.cl src/cl/anorm.h anorm_kernel)
     convertIntoHeader(src/cl/clear.cl src/cl/clear.h clear_kernel)
 
-    add_executable(TGV main.cpp src/TotalGeneralizedVariation.cpp src/TotalGeneralizedVariation.hpp src/MathRoutine.hpp  src/GPUBasedTotalGeneralizedVariation.cpp src/GPUBasedTotalGeneralizedVariation.hpp
+    add_executable(TGV CLI/main.cpp src/TotalGeneralizedVariation.cpp src/TotalGeneralizedVariation.hpp src/MathRoutine.hpp  src/GPUBasedTotalGeneralizedVariation.cpp src/GPUBasedTotalGeneralizedVariation.hpp
             src/cl/epsilon.h src/cl/gradient.h src/cl/copy.h src/cl/mulMatrixOnConstant.h src/cl/project.h src/cl/sumOfMatrix.h src/cl/transpondedGradient.h src/cl/transpondedEpsilon.h src/cl/calculateHist.h
             src/cl/prox.h src/cl/clear.h src/cl/anorm.h src/commonKernels.hpp)
-    target_link_libraries(TGV libclew libgpu libutils libstbimages stdc++fs)
+    target_link_libraries(TGV libclew libgpu libutils libstbimages stdc++fs libcxxopts)
 else()
     find_package(GTest REQUIRED)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}\

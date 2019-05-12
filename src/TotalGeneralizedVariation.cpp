@@ -129,14 +129,15 @@ void TotalGeneralizedVariation::tgvIteration(Image &u, Gradient &v, Gradient &p,
 
     Gradient vn = v + (-lambda_tgv * tau_v) * mathRoutine::calculateTranspondedEpsilon(q) + (tau_v * lambda_tv) * p;
 
-    Gradient pn = project(p + (tau_p * lambda_tv) * (mathRoutine::calculateGradient((-1) * ((-2) * un + u)) +  ((-2) * vn +  v)), lambda_tv);
+    Gradient pn = project(
+            p + (tau_p * lambda_tv) * (mathRoutine::calculateGradient((-1) * ((-2) * un + u)) + ((-2) * vn + v)),
+            lambda_tv);
 
     Epsilon qn = project(q + (-tau_q * lambda_tgv) * mathRoutine::calculateEpsilon(-2 * vn + v), lambda_tgv);
     u = std::move(un);
     v = std::move(vn);
     p = std::move(pn);
     q = std::move(qn);
-
 
 
 }
