@@ -8,15 +8,13 @@
 
 void calculateTranspondedGradient(__global float *gradient, __global float *transpondedGradient, unsigned int width,
                                   unsigned int height) {
-    const unsigned int index = get_global_id(0);
-    unsigned int imageSize = width * height;
-
+    const int index = get_global_id(0);
+    int imageSize = width * height;
     transpondedGradient[index] = -gradient[index] - gradient[index + imageSize];
     if (index % width != 0) {
         transpondedGradient[index] += gradient[index - 1];
     }
-
-    if (index / width != 0 ) {
+    if (index / width != 0) {
         transpondedGradient[index] += gradient[index + imageSize - width];
     }
 

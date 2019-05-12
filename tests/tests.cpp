@@ -187,18 +187,21 @@ TEST_F(imageTest, sumOfImages) {
 
 class GPUImageTest : public ::testing::Test {
 protected:
-    void SetUp() override {
+    GPUImageTest() {
         char **arg = (char **) calloc(2, sizeof(char *));
         arg[1] = (char *) "0";
         device = gpu::chooseGPUDevice(2, arg);
         context.init(device.device_id_opencl);
         context.activate();
+    }
+
+    void SetUp() override {
         imageBuf.resizeN(image.size());
         imageBuf.writeN(image.data(), image.size());
     }
 
     void TearDown() override {
-        context.clear();
+
     }
 
     std::vector<mathRoutine::Image> getImagesFromPath(const std::string &path) {
@@ -210,10 +213,10 @@ protected:
             std::string name = p.path();
             int width, height, channels;
             unsigned char *loadedImage = stbi_load(name.c_str(),
-                                             &width,
-                                             &height,
-                                             &channels,
-                                             STBI_grey);
+                                                   &width,
+                                                   &height,
+                                                   &channels,
+                                                   STBI_grey);
             mathRoutine::Image imageRes = mathRoutine::createImageFromUnsignedCharArray(loadedImage, width, height);
             result.emplace_back(imageRes);
             stbi_image_free(loadedImage);
@@ -256,26 +259,7 @@ protected:
                                 16, 1, 1, 196, 1,
                                 1, 1, 1, 200, 1,
                                 1, 196, 200, 3, 1};
-    mathRoutine::Gradient correctGradient = {{{0.f,   0},     {0,     15.f},  {0,      0},     {0,      0},      {0, 0}},
-                                             {{15.f,  15.f},  {-15.f, -15.f}, {0,      0},     {0,      195.f},  {0, 0}},
-                                             {{-15.f, -15.f}, {0,     0},     {195.f,  0},     {-195.f, 4.f},    {0, 0}},
-                                             {{0,     0},     {0,     195.f}, {199.f,  199.f}, {-199.f, -197.f}, {0, 0}},
-                                             {{195.f, 0},     {4.0f,  0},     {-197.f, 0},     {-2.f,   0},      {0, 0}}};
-    mathRoutine::Epsilon correctEpsilon = {{{0,      15.f,  15.f,  15.f},  {0,      -15.f, -15.f, -30.f},  {0,      0,      0,      0},      {0,     0,      0,      195.f},  {0, 0, 0, 0}},
-                                           {{-30.f,  -30.f, -30.f, -30.f}, {15.f,   15.f,  15.f,  15.f},   {0,      195.f,  195.f,  0},      {0,     -195.f, -195.f, -191.f}, {0, 0, 0, 0}},
-                                           {{15.f,   15.f,  15.f,  15.f},  {195.f,  0,     0,     195.f},  {-390.f, 4.f,    4.f,    199.f},  {195.f, -4.f,   -4.f,   -201.f}, {0, 0, 0, 0}},
-                                           {{0,      195.f, 195.f, 0},     {199.f,  4.f,   4.f,   -195.f}, {-398.f, -396.f, -396.f, -199.f}, {199.f, 197.f,  197.f,  197.f},  {0, 0, 0, 0}},
-                                           {{-191.f, 0,     0,     0},     {-201.f, 0,     0,     0},      {195.f,  0,      0,      0},      {2.f,   0,      0,      0},      {0, 0, 0, 0},}};
-    mathRoutine::Image correctTranspondedGradient = {{0,      -15.f,  0,      0,      0},
-                                                     {-30.f,  60.f,   -15.f,  -195.f, 0},
-                                                     {45.f,   -30.f,  -195.f, 581.f,  -195.f},
-                                                     {-15.f,  -195.f, -398.f, 599.f,  -199.f},
-                                                     {-195.f, 386.f,  400.f,  -392.f, -2.f}};
-    mathRoutine::Gradient correctTransopondedEpsilon = {{{-15.f,  -30.f},  {15.f,   60.f},   {0,      -15.f},  {0,      -195.f}, {0,     0}},
-                                                        {{75.f,   75.f},   {-75.f,  -90.f},  {-180.f, -180.f}, {195.f,  776.f},  {0,     -195.f}},
-                                                        {{-60.f,  -60.f},  {-165.f, -165.f}, {776.f,  -203.f}, {-776.f, 18.f},   {195.f, -4.f}},
-                                                        {{-180.f, -180.f}, {-203.f, 581.f},  {997.f,  798.f},  {-798.f, -991.f}, {199.f, 197.f}},
-                                                        {{386.f,  0},      {14.f,   -195.f}, {-792.f, -199.f}, {390.f,  197.f},  {2.f,   0}}};
+
     unsigned int workGroupSize = 128;
     unsigned int globalWorkSize = (image.size() + workGroupSize - 1) / workGroupSize * workGroupSize;
     gpu::WorkSize workSize = gpu::WorkSize(workGroupSize, globalWorkSize);
@@ -308,6 +292,7 @@ TEST_F(GPUImageTest, gpuProjectOfMatrixTest) {
                         (int) image.size(), 2, 1.f);
     std::vector<float> resultNormed(image.size(), 0.f);
     normedBuf.readN(resultNormed.data(), resultNormed.size());
+    mathRoutine::Gradient correctGradient = mathRoutine::calculateGradient(imageInMatrix);
     auto correctNormed = mathRoutine::anorm(correctGradient);
     auto projected = mathRoutine::project(correctGradient, 1.f);
     tgvProjectedKernel.exec(workSize, gradientBuf, normedBuf, (int) imageInMatrix.size(), (int) imageInMatrix[0].size(),
@@ -321,7 +306,7 @@ TEST_F(GPUImageTest, gpuProjectOfMatrixTest) {
                 float first = projected[i][j][k];
                 float second = result[j + i * projected[i].size() + k * image.size()];
                 ASSERT_NEAR(*reinterpret_cast<uint32_t * >(&first), *reinterpret_cast<uint32_t * >(&second),
-                            3); // OpenCL provide presicion to 3 ulp on IEEE standart
+                            9); // OpenCL provide precision to 3 ulp by IEEE standart for operations like sqrt,/ and etc. in this case there are 2 of these operations
             }
         }
     }
@@ -338,36 +323,18 @@ TEST_F(GPUImageTest, gpuCalculateGradient) {
                            (int) image.size());
     std::vector<float> result(2 * image.size(), 0.f);
     gradientBuf.readN(result.data(), 2 * image.size());
+    mathRoutine::Gradient correctGradient = mathRoutine::calculateGradient(imageInMatrix);
     for (size_t i = 0; i < correctGradient.size(); i++) {
         for (size_t j = 0; j < correctGradient[0].size(); j++) {
-            ASSERT_NEAR(result[j + i * correctGradient[0].size()], (float) correctGradient[i][j][0], mathRoutine::eps);
-            ASSERT_NEAR(result[j + i * correctGradient[0].size() + result.size() / 2], (float) correctGradient[i][j][1],
-                        mathRoutine::eps);
+            float first = result[j + i * correctGradient[0].size()];
+            float second = correctGradient[i][j][0];
+            ASSERT_EQ(*reinterpret_cast<uint32_t * >(&first), *reinterpret_cast<uint32_t * >(&second)); // Should be equals to 0 ulps
+            first = result[j + i * correctGradient[0].size() + result.size() / 2];
+            second =  correctGradient[i][j][1];
+            ASSERT_EQ(*reinterpret_cast<uint32_t * >(&first), *reinterpret_cast<uint32_t * >(&second));
         }
     }
 }
-
-//TEST_F(GPUImageTest, gpuCalculateTranspondedGradient) {
-//    gpu::gpu_mem_32f gradientBuf;
-//    gradientBuf.resizeN(2 * image.size());
-//    tgvGradientKernel.compile();
-//    tgvTranspondedGradientKernel.compile();
-//    tgvGradientKernel.exec(workSize, imageBuf, gradientBuf, (unsigned int) imageInMatrix.size(),
-//                           (unsigned int) imageInMatrix[0].size(),
-//                           (unsigned int) image.size());
-//
-//    tgvTranspondedGradientKernel.exec(workSize, gradientBuf, imageBuf,
-//                                      (unsigned int) imageInMatrix.size(), (unsigned int) imageInMatrix[0].size(),
-//                                      (unsigned int) image.size());
-//    std::vector<float> result(image.size(), 0.f);
-//    imageBuf.readN(result.data(), image.size());
-//    for (size_t i = 0; i < correctTranspondedGradient.size(); i++) {
-//        for (size_t j = 0; j < correctTranspondedGradient[0].size(); j++) {
-//            ASSERT_NEAR(result[j + i * correctTranspondedGradient[0].size()], correctTranspondedGradient[i][j],
-//                        mathRoutine::eps);
-//        }
-//    }
-//}
 
 TEST_F(GPUImageTest, gpuCalculateEpsilon) {
     gpu::gpu_mem_32f gradientBuf;
@@ -383,16 +350,52 @@ TEST_F(GPUImageTest, gpuCalculateEpsilon) {
                           (int) image.size());
     std::vector<float> result(4 * image.size(), 0.f);
     epsilonBuf.readN(result.data(), 4 * image.size());
+    mathRoutine::Gradient gradient = mathRoutine::calculateGradient(imageInMatrix);
+    mathRoutine::Epsilon correctEpsilon = mathRoutine::calculateEpsilon(gradient);
     for (size_t i = 0; i < correctEpsilon.size(); i++) {
         for (size_t j = 0; j < correctEpsilon[0].size(); j++) {
-            ASSERT_NEAR(result[j + i * correctEpsilon[0].size()], (float) correctEpsilon[i][j][0], mathRoutine::eps);
-            ASSERT_NEAR(result[j + i * correctEpsilon[0].size() + result.size() / 4], (float) correctEpsilon[i][j][1],
-                        mathRoutine::eps);
-            ASSERT_NEAR(result[j + i * correctEpsilon[0].size() + 2 * result.size() / 4],
-                        (float) correctEpsilon[i][j][2], mathRoutine::eps);
-            ASSERT_NEAR(result[j + i * correctEpsilon[0].size() + result.size() / 4 * 3],
-                        (float) correctEpsilon[i][j][3],
-                        mathRoutine::eps);
+            float first = result[j + i * correctEpsilon[0].size()];
+            float second = correctEpsilon[i][j][0];
+            ASSERT_EQ(*reinterpret_cast<uint32_t * >(&first), *reinterpret_cast<uint32_t * >(&second)); // Should be equals to 0 ulps
+            first = result[j + i * correctEpsilon[0].size() + result.size() / 4];
+            second =  correctEpsilon[i][j][1];
+            ASSERT_EQ(*reinterpret_cast<uint32_t * >(&first), *reinterpret_cast<uint32_t * >(&second));
+            first = result[j + i * correctEpsilon[0].size() + 2 * result.size() / 4];
+            second =  correctEpsilon[i][j][2];
+            ASSERT_EQ(*reinterpret_cast<uint32_t * >(&first), *reinterpret_cast<uint32_t * >(&second));
+            first = result[j + i * correctEpsilon[0].size() + result.size() / 4 * 3];
+            second =  correctEpsilon[i][j][3];
+            ASSERT_EQ(*reinterpret_cast<uint32_t * >(&first), *reinterpret_cast<uint32_t * >(&second));
+        }
+    }
+}
+
+
+TEST_F(GPUImageTest, gpuCalculateTranspondedGradient) {
+    gpu::gpu_mem_32f gradientBuf;
+    gradientBuf.resizeN(2 * image.size());
+    tgvGradientKernel.compile();
+    tgvTranspondedGradientKernel.compile();
+    tgvGradientKernel.exec(workSize, imageBuf, gradientBuf, (unsigned int) imageInMatrix.size(),
+                           (unsigned int) imageInMatrix[0].size(),
+                           (unsigned int) image.size());
+
+    tgvTranspondedGradientKernel.exec(workSize, gradientBuf, imageBuf,
+                                      (unsigned int) imageInMatrix.size(), (unsigned int) imageInMatrix[0].size(),
+                                      (unsigned int) image.size());
+    std::vector<float> result(image.size(), 0.f);
+    imageBuf.readN(result.data(), image.size());
+
+    mathRoutine::Gradient gradient = mathRoutine::calculateGradient(imageInMatrix);
+    mathRoutine::Image transpondedGradient = mathRoutine::calculateTranspondedGradient(gradient);
+    for (size_t i = 0; i < transpondedGradient.size(); i++) {
+        for (size_t j = 0; j < transpondedGradient[0].size(); j++) {
+            float first = result[j + i * transpondedGradient[0].size()];
+            if(first == -0.0f){
+                first = 0.0f;
+            }
+            float second = transpondedGradient[i][j];
+            ASSERT_EQ(*reinterpret_cast<uint32_t * >(&first), *reinterpret_cast<uint32_t * >(&second)); // Should be equals to 0 ulps
         }
     }
 }
@@ -411,18 +414,22 @@ TEST_F(GPUImageTest, gpuCalculateTranspondedEpsilon) {
     tgvEpsilonKernel.exec(workSize, gradientBuf,
                           epsilonBuf, (int) imageInMatrix.size(), (int) imageInMatrix[0].size(),
                           (int) image.size());
-    tgvTranspondedKernel.exec(workSize, epsilonBuf, gradientBuf, (int) imageInMatrix.size(),
-                              (int) imageInMatrix[0].size(),
-                              (int) image.size());
+    tgvTranspondedKernel.exec(workSize, epsilonBuf, gradientBuf, (unsigned int) imageInMatrix.size(),
+                              (unsigned int) imageInMatrix[0].size(),
+                              (unsigned int) image.size());
     std::vector<float> result(2 * image.size(), 0.f);
     gradientBuf.readN(result.data(), result.size());
+    mathRoutine::Gradient gradient = mathRoutine::calculateGradient(imageInMatrix);
+    mathRoutine::Epsilon epsilon = mathRoutine::calculateEpsilon(gradient);
+    mathRoutine::Gradient correctTransopondedEpsilon = mathRoutine::calculateTranspondedEpsilon(epsilon);
     for (size_t i = 0; i < correctTransopondedEpsilon.size(); i++) {
         for (size_t j = 0; j < correctTransopondedEpsilon[0].size(); j++) {
-            ASSERT_NEAR(result[j + i * correctTransopondedEpsilon[0].size()],
-                        (float) correctTransopondedEpsilon[i][j][0],
-                        mathRoutine::eps);
-            ASSERT_NEAR(result[j + i * correctTransopondedEpsilon[0].size() + image.size()],
-                        (float) correctTransopondedEpsilon[i][j][1], mathRoutine::eps);
+            float first = result[j + i * correctTransopondedEpsilon[0].size()];
+            float second = correctTransopondedEpsilon[i][j][0];
+            ASSERT_EQ(*reinterpret_cast<uint32_t * >(&first), *reinterpret_cast<uint32_t * >(&second)); // Should be equals to 0 ulps
+            first = result[j + i * correctTransopondedEpsilon[0].size() + image.size()];
+            second = correctTransopondedEpsilon[i][j][1];
+            ASSERT_EQ(*reinterpret_cast<uint32_t * >(&first), *reinterpret_cast<uint32_t * >(&second)); // Should be equals to 0 ulps
         }
     }
 }
@@ -436,7 +443,6 @@ TEST_F(GPUImageTest, gpuHistsTest) {
     size_t height = images[0].size();
     size_t width = images[0][0].size();
     std::vector<Image> Ws(images.size(), mathRoutine::Image(height, std::vector<float>(width, 0)));
-    std::cout << height << " " << width << std::endl;
     for (size_t histNum = 0; histNum < Ws.size(); histNum++) {
         for (auto &image: images) {
             for (size_t i = 0; i < height; i++) {
@@ -466,7 +472,9 @@ TEST_F(GPUImageTest, gpuHistsTest) {
     for (size_t k = 0; k < Ws.size(); k++) {
         for (size_t i = 0; i < Ws[k].size(); i++) {
             for (size_t j = 0; j < Ws[k][i].size(); j++) {
-                ASSERT_NEAR(Ws[k][i][j], result[j + i * Ws[k][i].size() + k * image.size()], mathRoutine::eps);
+                float first = result[j + i * Ws[k][i].size() + k * image.size()];
+                float second = Ws[k][i][j];
+                ASSERT_EQ(*reinterpret_cast<uint32_t * >(&first), *reinterpret_cast<uint32_t * >(&second)); // Should be equals to 0 ulps
             }
         }
     }
