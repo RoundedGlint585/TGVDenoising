@@ -198,7 +198,7 @@ protected:
     }
 
     void TearDown() override {
-
+        context.clear();
     }
 
     std::vector<mathRoutine::Image> getImagesFromPath(const std::string &path) {
@@ -289,7 +289,6 @@ protected:
     ocl::Kernel tgvCalculateHist = ocl::Kernel(calculate_hist_kernel, calculate_hist_kernel_length, "calculateHist");
     ocl::Kernel tgvAnormKernel = ocl::Kernel(anorm_kernel, anorm_kernel_length, "anorm");
     gpu::gpu_mem_32f imageBuf;
-    float lambda_data = 1.0;
 
 };
 
