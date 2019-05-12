@@ -18,7 +18,7 @@ public:
 
     void init(const std::string& path, size_t amountOfImages);
 
-    void start(size_t iterations, float tau, float lambda_tv, float lambda_tgv, float lambda_data);
+    void iteration(float tau, float lambda_tv, float lambda_tgv, float lambda_data);
 
     void writeImage(const std::string &name);
 
@@ -37,20 +37,15 @@ private:
 
     std::vector<float> getBuffer(size_t name) const;
 
-    void iteration(float tau, float lambda_tv, float lambda_tgv, float lambda_data, unsigned int workGroupSize,
-                   unsigned int globalWorkSize);
 
-    void calculateImageDual(float tau_u, float lambda_tv, float tau, float lambda_data, unsigned int workGroupSize,
-                            unsigned int globalWorkSize);
 
-    void calculateVDual(float tau_v, float lambda_tgv, float lambda_tv, unsigned int workGroupSize,
-                        unsigned int globalWorkSize);
+    void calculateImageDual(float tau_u, float lambda_tv, float tau, float lambda_data);
 
-    void calculatePDual(float tau_p, float lambda_tv, unsigned int workGroupSize,
-                        unsigned int globalWorkSize);
+    void calculateVDual(float tau_v, float lambda_tgv, float lambda_tv);
 
-    void calculateQDual(float tau_q, float lambda_tgv, unsigned int workGroupSize,
-                        unsigned int globalWorkSize);
+    void calculatePDual(float tau_p, float lambda_tv);
+
+    void calculateQDual(float tau_q, float lambda_tgv);
 
     
     enum bufIndex {
@@ -78,5 +73,8 @@ private:
     size_t height = 0;
     size_t amountOfObservation = 0;
     size_t amountOfImagesToGPU = 0;
+    unsigned int workGroupSize;
+    unsigned int globalWorkSize;
+
 };
 

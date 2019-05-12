@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.9)
 project(TGV)
 
 set(BUILD_RELEASE true CACHE BOOL "BUILD_RELEASE")
+set(BUILD_BENCHMARKS true CACHE BOOL "BUILD_BENCHMARKS")
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}\
@@ -28,11 +29,12 @@ if(${BUILD_RELEASE})
     convertIntoHeader(src/cl/anorm.cl src/cl/anorm.h anorm_kernel)
     convertIntoHeader(src/cl/clear.cl src/cl/clear.h clear_kernel)
 
-    add_executable(TGV CLI/main.cpp src/TotalGeneralizedVariation.cpp src/TotalGeneralizedVariation.hpp src/MathRoutine.hpp  src/GPUBasedTotalGeneralizedVariation.cpp src/GPUBasedTotalGeneralizedVariation.hpp
+    add_executable(TGV cli/main.cpp src/TotalGeneralizedVariation.cpp src/TotalGeneralizedVariation.hpp src/MathRoutine.hpp  src/GPUBasedTotalGeneralizedVariation.cpp src/GPUBasedTotalGeneralizedVariation.hpp
             src/cl/epsilon.h src/cl/gradient.h src/cl/copy.h src/cl/mulMatrixOnConstant.h src/cl/project.h src/cl/sumOfMatrix.h src/cl/transpondedGradient.h src/cl/transpondedEpsilon.h src/cl/calculateHist.h
             src/cl/prox.h src/cl/clear.h src/cl/anorm.h src/commonKernels.hpp)
     target_link_libraries(TGV libclew libgpu libutils libstbimages stdc++fs libcxxopts)
 else()
+
     find_package(GTest REQUIRED)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}\
     -fno-omit-frame-pointer\
@@ -60,3 +62,27 @@ else()
     target_link_libraries(runUnitTests ${GTEST_LIBRARIES} pthread libclew libgpu libutils libstbimages stdc++fs)
 endif()
 
+#if(${BUILD_BENCHMARKS})
+#    set(CMAKE_BUILD_TYPE Release)
+#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}\
+#        -fno-omit-frame-pointer\
+#        -lbenchmark \
+#        -lpthread \
+#        ")
+#    convertIntoHeader(src/cl/gradient.cl src/cl/gradient.h gradient_kernel)
+#    convertIntoHeader(src/cl/epsilon.cl src/cl/epsilon.h epsilon_kernel)
+#    convertIntoHeader(src/cl/copy.cl src/cl/copy.h copy_kernel)
+#    convertIntoHeader(src/cl/mulMatrixOnConstant.cl src/cl/mulMatrixOnConstant.h mul_matrix_on_constant_kernel)
+#    convertIntoHeader(src/cl/project.cl src/cl/project.h project_kernel)
+#    convertIntoHeader(src/cl/sumOfMatrix.cl src/cl/sumOfMatrix.h sum_of_matrix_kernel)
+#    convertIntoHeader(src/cl/transpondedGradient.cl src/cl/transpondedGradient.h transponded_gradient_kernel)
+#    convertIntoHeader(src/cl/transpondedEpsilon.cl src/cl/transpondedEpsilon.h transponded_epsilon_kernel)
+#    convertIntoHeader(src/cl/calculateHist.cl src/cl/calculateHist.h calculate_hist_kernel)
+#    convertIntoHeader(src/cl/prox.cl src/cl/prox.h prox_kernel)
+#    convertIntoHeader(src/cl/sqrt.cl src/cl/sqrt.h sqrt_kernel)
+#    convertIntoHeader(src/cl/anorm.cl src/cl/anorm.h anorm_kernel)
+#    add_executable(benchmarks benchmarks/benchmarks.cpp src/TotalGeneralizedVariation.cpp src/TotalGeneralizedVariation.hpp src/MathRoutine.hpp  src/GPUBasedTotalGeneralizedVariation.cpp src/GPUBasedTotalGeneralizedVariation.hpp
+#            src/cl/epsilon.h src/cl/gradient.h src/cl/copy.h src/cl/mulMatrixOnConstant.h src/cl/project.h src/cl/sumOfMatrix.h src/cl/transpondedGradient.h src/cl/transpondedEpsilon.h src/cl/calculateHist.h
+#            src/cl/prox.h src/cl/clear.h src/cl/anorm.h src/commonKernels.hpp)
+#    target_link_libraries(benchmarks ${GBENCHMARK_LIBRARIES} pthread libclew libgpu libutils libstbimages stdc++fs)
+#endif()

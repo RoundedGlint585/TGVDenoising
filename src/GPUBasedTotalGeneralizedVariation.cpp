@@ -65,7 +65,24 @@ void GPUBasedTGV::init(const std::string &path, size_t amountOfImages) {
     reserveDataN(transpondedEpsilon, 2 * sizeOfImage);
     reserveDataN(histogram, amountOfObservation * sizeOfImage);
     reserveDataN(prox, 2 * amountOfObservation * sizeOfImage);
-    std::cout << "Memory allocated and reserved" << std::endl;
+    workGroupSize = 128;
+    globalWorkSize = (memoryBuffers[image].first + workGroupSize - 1) / workGroupSize * workGroupSize;
+    ///INITIAL VALUES
+    tgvGradientKernel.exec(gpu::WorkSize(workGroupSize, globalWorkSize),
+                           memoryBuffers[image].second,
+                           memoryBuffers[v].second, (unsigned int) width, (unsigned int) height,
+                           (unsigned int) memoryBuffers[image].first);
+    tgvGradientKernel.exec(gpu::WorkSize(workGroupSize, globalWorkSize),
+                           memoryBuffers[image].second,
+                           memoryBuffers[p].second, (unsigned int) width, (unsigned int) height,
+                           (unsigned int) memoryBuffers[image].first);
+    tgvEpsilonKernel.exec(gpu::WorkSize(workGroupSize, globalWorkSize),
+                          memoryBuffers[p].second,
+                          memoryBuffers[q].second, (unsigned int) width, (unsigned int) height,
+                          (unsigned int) memoryBuffers[image].first);
+    tgvCalculateHistKernel.exec(gpu::WorkSize(workGroupSize, globalWorkSize), memoryBuffers[observations].second,
+                                memoryBuffers[histogram].second, (unsigned int) width, (unsigned int) height,
+                                (unsigned int) memoryBuffers[image].first, (unsigned int) amountOfObservation);
 }
 
 std::tuple<size_t, size_t, int, int, std::vector<float>, std::vector<float>>
@@ -78,7 +95,6 @@ GPUBasedTGV::loadImages(std::string_view path, size_t amountOfImages) {
     std::vector<float> observations;
     std::vector<float> image;
     for (auto &p: directory_iterator(path)) {
-        std::cout << "loading image: " << p << std::endl;
         std::string name = p.path();
         unsigned char *bytes = stbi_load(name.c_str(),
                                          &width,
@@ -140,38 +156,6 @@ std::vector<float> GPUBasedTGV::getBuffer(size_t name) const {
     return result;
 }
 
-void GPUBasedTGV::start(size_t iterations, float tau, float lambda_tv, float lambda_tgv, float lambda_data) {
-    unsigned int workGroupSize = 128;
-    std::cout << "Image size: " << memoryBuffers[image].first << std::endl;
-    unsigned int globalWorkSize = (memoryBuffers[image].first + workGroupSize - 1) / workGroupSize * workGroupSize;
-    std::cout << "Global work size: " << globalWorkSize << std::endl;
-    std::cout << "Init of hist\n" << std::endl;
-    ///INITIAL VALUES
-
-
-    tgvGradientKernel.exec(gpu::WorkSize(workGroupSize, globalWorkSize),
-                           memoryBuffers[image].second,
-                           memoryBuffers[v].second, (unsigned int) width, (unsigned int) height,
-                           (unsigned int) memoryBuffers[image].first);
-    tgvGradientKernel.exec(gpu::WorkSize(workGroupSize, globalWorkSize),
-                           memoryBuffers[image].second,
-                           memoryBuffers[p].second, (unsigned int) width, (unsigned int) height,
-                           (unsigned int) memoryBuffers[image].first);
-    tgvEpsilonKernel.exec(gpu::WorkSize(workGroupSize, globalWorkSize),
-                          memoryBuffers[p].second,
-                          memoryBuffers[q].second, (unsigned int) width, (unsigned int) height,
-                          (unsigned int) memoryBuffers[image].first);
-    tgvCalculateHistKernel.exec(gpu::WorkSize(workGroupSize, globalWorkSize), memoryBuffers[observations].second,
-                                memoryBuffers[histogram].second, (unsigned int) width, (unsigned int) height,
-                                (unsigned int) memoryBuffers[image].first, (unsigned int) amountOfObservation);
-    auto hist = getBuffer(histogram);
-    for (size_t i = 0; i < iterations; i++) {
-        if (i % 100 == 0) {
-            std::cout << "Iteration #: " << i << std::endl;
-        }
-        iteration(tau, lambda_tv, lambda_tgv, lambda_data, workGroupSize, globalWorkSize);
-    }
-}
 
 void GPUBasedTGV::writeImage(const std::string &name) {
     auto result = getBuffer(image);
@@ -188,8 +172,7 @@ std::vector<float> GPUBasedTGV::getImage() {
 }
 
 void
-GPUBasedTGV::calculateImageDual(float tau_u, float lambda_tv, float tau, float lambda_data, unsigned int workGroupSize,
-                                unsigned int globalWorkSize) {
+GPUBasedTGV::calculateImageDual(float tau_u, float lambda_tv, float tau, float lambda_data) {
     ///prox(u + (-tau_u * lambda_tv) * (mathRoutine::calculateTranspondedGradient(p)), tau_u, lambda_data)
     auto workSize = gpu::WorkSize(workGroupSize, globalWorkSize);
     ///UN
@@ -219,8 +202,7 @@ GPUBasedTGV::calculateImageDual(float tau_u, float lambda_tv, float tau, float l
                        (unsigned int) memoryBuffers[image].first);
 }
 
-void GPUBasedTGV::calculateVDual(float tau_v, float lambda_tgv, float lambda_tv, unsigned int workGroupSize,
-                                 unsigned int globalWorkSize) {
+void GPUBasedTGV::calculateVDual(float tau_v, float lambda_tgv, float lambda_tv) {
     //v + (-lambda_tgv *tau_v) * mathRoutine::calculateTranspondedEpsilon(q) + (tau_v*lambda_tv )* p;
     auto workSize = gpu::WorkSize(workGroupSize, globalWorkSize);
     // mathRoutine::calculateTranspondedEpsilon(q)
@@ -256,8 +238,7 @@ void GPUBasedTGV::calculateVDual(float tau_v, float lambda_tgv, float lambda_tv,
                               (unsigned int) memoryBuffers[image].first);
 }
 
-void GPUBasedTGV::calculatePDual(float tau_p, float lambda_tv, unsigned int workGroupSize,
-                                 unsigned int globalWorkSize) {
+void GPUBasedTGV::calculatePDual(float tau_p, float lambda_tv) {
     //project(p + (tau_p * lambda_tv) * (mathRoutine::calculateGradient((-1) * ((-2) * un + u)) +  ((-2) * vn +  v)), lambda_tv);
     auto workSize = gpu::WorkSize(workGroupSize, globalWorkSize);
     //Копируем imageDual в transpondedGradient
@@ -322,8 +303,7 @@ void GPUBasedTGV::calculatePDual(float tau_p, float lambda_tv, unsigned int work
 
 }
 
-void GPUBasedTGV::calculateQDual(float tau_q, float lambda_tgv, unsigned int workGroupSize,
-                                 unsigned int globalWorkSize) {
+void GPUBasedTGV::calculateQDual(float tau_q, float lambda_tgv) {
     auto workSize = gpu::WorkSize(workGroupSize, globalWorkSize);
     ///project(q + (-tau_q * lambda_tgv) * mathRoutine::calculateEpsilon(-2 * vn + v), lambda_tgv);
     //Копируем vDual в transpondedEpsilon
@@ -363,8 +343,7 @@ void GPUBasedTGV::calculateQDual(float tau_q, float lambda_tgv, unsigned int wor
                           (unsigned int) width, (unsigned int) height, (unsigned int) memoryBuffers[image].first, 4);
 }
 
-void GPUBasedTGV::iteration(float tau, float lambda_tv, float lambda_tgv, float lambda_data, unsigned int workGroupSize,
-                            unsigned int globalWorkSize) {
+void GPUBasedTGV::iteration(float tau, float lambda_tv, float lambda_tgv, float lambda_data) {
 
     float tau_u, tau_v, tau_p, tau_q;
     tau_u = tau;
@@ -373,19 +352,19 @@ void GPUBasedTGV::iteration(float tau, float lambda_tv, float lambda_tgv, float 
     tau_q = tau;
     auto workSize = gpu::WorkSize(workGroupSize, globalWorkSize);
     ///UN
-    calculateImageDual(tau_u, lambda_tv, tau, lambda_data, workGroupSize, globalWorkSize);
+    calculateImageDual(tau_u, lambda_tv, tau, lambda_data);
     ///
 
     /// VN
-    calculateVDual(tau_v, lambda_tgv, lambda_tv, workGroupSize, globalWorkSize);
+    calculateVDual(tau_v, lambda_tgv, lambda_tv);
     ///
 
     ///PN
-    calculatePDual(tau_p, lambda_tv, workGroupSize, globalWorkSize);
+    calculatePDual(tau_p, lambda_tv);
     ///
 
     ///QN
-    calculateQDual(tau_q, lambda_tgv, workGroupSize, globalWorkSize);
+    calculateQDual(tau_q, lambda_tgv);
     ///
 
 

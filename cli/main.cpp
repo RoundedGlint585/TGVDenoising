@@ -54,7 +54,15 @@ void GPU(int argc, char* index, size_t iterations, size_t amountOfImages, const 
     arg[1] = index;
     auto worker = GPUBasedTGV(2, arg, amountOfImages);
     worker.init(path.c_str(), amountOfImages);
-    worker.start(iterations, tau, lambda_tv, lambda_tgv, lambda_data);
+    std::cout << "Reading files from: " << path << std::endl;
+    for(size_t i = 0; i < iterations; i++) {
+        if(i % 100 == 0){
+            std::cout << "\rIteration # " << i << " out of " << iterations;
+            std::cout.flush();
+        }
+        worker.iteration(tau, lambda_tv, lambda_tgv, lambda_data);
+    }
+    std::cout << std::endl;
     worker.writeImage(resultFileName + ".png");
     worker.writePly(resultFileName + ".ply");
 }
