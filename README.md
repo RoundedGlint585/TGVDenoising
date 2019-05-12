@@ -53,10 +53,12 @@ Current solution based on command line interface with keys
    
 So just start program with these keys
 
-###Examples
+### Examples
+
 ./TGV -g -n 400 -p "data" -a "0" -r "resultFileName" -i 14
 
 ./TGV -p "data" -a "0" -r "DenoisedImage" -i 6
+
 ## Authors
 
 * **Daniil Smolyakov** - *Initial work and CPU based code* - [DanonOfficial](https://github.com/DanonOfficial)
