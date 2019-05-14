@@ -20,10 +20,11 @@ public:
 
     void iteration(float tau, float lambda_tv, float lambda_tgv, float lambda_data);
 
-    void writeImage(const std::string &name);
+    void writeImage(const std::string &name) const ;
 
-    void writePly(const std::string& name);
+    void writePly(const std::string& name) const ;
 
+    void writeAsPFM(const std::string& name) const;
     std::vector<float> getImage();
 
 private:

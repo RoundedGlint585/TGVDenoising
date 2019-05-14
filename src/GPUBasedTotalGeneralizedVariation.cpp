@@ -5,7 +5,7 @@
 #include "GPUBasedTotalGeneralizedVariation.hpp"
 #include <filesystem>
 #include <fstream>
-
+#include "PFMReader.hpp"
 #define Debug
 
 GPUBasedTGV::GPUBasedTGV(std::size_t index) : workGroupSize(128) {
@@ -99,19 +99,18 @@ GPUBasedTGV::loadImages(std::string_view path, size_t amountOfImages) {
     std::vector<float> image;
     for (auto &p: directory_iterator(path)) {
         std::string name = p.path();
-        unsigned char *bytes = stbi_load(name.c_str(),
-                                         &width,
-                                         &height,
-                                         &channels,
-                                         STBI_grey);
+        auto results = readPFM(name.c_str());
+        height = std::get<0>(results);
+        width = std::get<1>(results);
+
         if (totalAmountOfImages != 0) {
             for (size_t i = 0; i < width * height; i++) {
-                observations.emplace_back((float) bytes[i]);
+                observations.emplace_back((float) std::get<2>(results)[i]);
             }
         } else {
             for (size_t i = 0; i < width * height; i++) {
-                image.emplace_back((float) bytes[i]);
-                observations.emplace_back((float) bytes[i]);
+                image.emplace_back((float) std::get<2>(results)[i]);
+                observations.emplace_back((float) std::get<2>(results)[i]);
             }
         }
         totalAmountOfImages++;
@@ -160,7 +159,7 @@ std::vector<float> GPUBasedTGV::getBuffer(size_t name) const {
 }
 
 
-void GPUBasedTGV::writeImage(const std::string &name) {
+void GPUBasedTGV::writeImage(const std::string &name) const {
     auto result = getBuffer(image);
     unsigned char *image = new unsigned char[result.size()];
     for (size_t i = 0; i < result.size(); i++) {
@@ -168,6 +167,11 @@ void GPUBasedTGV::writeImage(const std::string &name) {
     }
     stbi_write_png(name.c_str(), width, height, 1, image, width);
     delete[](image);
+}
+
+void GPUBasedTGV::writeAsPFM(const std::string &name) const {
+    auto result = getBuffer(image);
+    writePFM(name, height, width, result);
 }
 
 std::vector<float> GPUBasedTGV::getImage() {
@@ -393,7 +397,7 @@ void GPUBasedTGV::iteration(float tau, float lambda_tv, float lambda_tgv, float 
                        (unsigned int) memoryBuffers[image].first);
 }
 
-void GPUBasedTGV::writePly(const std::string &name) {
+void GPUBasedTGV::writePly(const std::string &name) const{
     std::ofstream out(name.c_str());
     out << "ply" << std::endl << "format ascii 1.0" << std::endl;
     out << "element vertex " << height*width << std::endl;
