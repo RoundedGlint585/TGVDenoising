@@ -9,6 +9,9 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}\
     -fno-omit-frame-pointer\
 ")
 add_subdirectory(third-party)
+# convertIntoHeader CMake-функция объявлена в libs/gpu/CMakeLists.txt:71
+# Она считывает все байты из файла src/cl/aplusb.cl (т.е. весь исходный код кернела) и преобразует их в массив байтов в файле src/cl/aplusb_cl.h aplusb_kernel
+# Обратите внимание что это происходит на этапе компиляции, кроме того необходимо чтобы файл src/cl/aplusb_cl.h был перечислен среди исходников для компиляции при вызове add_executable
 convertIntoHeader(src/cl/gradient.cl src/cl/gradient.h gradient_kernel)
 convertIntoHeader(src/cl/epsilon.cl src/cl/epsilon.h epsilon_kernel)
 convertIntoHeader(src/cl/copy.cl src/cl/copy.h copy_kernel)
@@ -19,31 +22,43 @@ convertIntoHeader(src/cl/transpondedGradient.cl src/cl/transpondedGradient.h tra
 convertIntoHeader(src/cl/transpondedEpsilon.cl src/cl/transpondedEpsilon.h transponded_epsilon_kernel)
 convertIntoHeader(src/cl/calculateHist.cl src/cl/calculateHist.h calculate_hist_kernel)
 convertIntoHeader(src/cl/prox.cl src/cl/prox.h prox_kernel)
+convertIntoHeader(src/cl/sqrt.cl src/cl/sqrt.h sqrt_kernel)
 convertIntoHeader(src/cl/anorm.cl src/cl/anorm.h anorm_kernel)
-convertIntoHeader(src/cl/clear.cl src/cl/clear.h clear_kernel)
 
-if(${BUILD_RELEASE})
-    set(CMAKE_BUILD_TYPE Release)
-    # convertIntoHeader CMake-функция объявлена в libs/gpu/CMakeLists.txt:71
-    # Она считывает все байты из файла src/cl/aplusb.cl (т.е. весь исходный код кернела) и преобразует их в массив байтов в файле src/cl/aplusb_cl.h aplusb_kernel
-    # Обратите внимание что это происходит на этапе компиляции, кроме того необходимо чтобы файл src/cl/aplusb_cl.h был перечислен среди исходников для компиляции при вызове add_executable
+if(!${BUILD_RELEASE})
+    set(CMAKE_BUILD_TYPE Debug)
+
 
     add_executable(TGV cli/main.cpp src/TotalGeneralizedVariation.cpp src/TotalGeneralizedVariation.hpp src/MathRoutine.hpp  src/GPUBasedTotalGeneralizedVariation.cpp src/GPUBasedTotalGeneralizedVariation.hpp
             src/cl/epsilon.h src/cl/gradient.h src/cl/copy.h src/cl/mulMatrixOnConstant.h src/cl/project.h src/cl/sumOfMatrix.h src/cl/transpondedGradient.h src/cl/transpondedEpsilon.h src/cl/calculateHist.h
             src/cl/prox.h src/cl/clear.h src/cl/anorm.h src/commonKernels.hpp)
     target_link_libraries(TGV libclew libgpu libutils libstbimages stdc++fs libcxxopts)
 else()
-    find_package(GTest REQUIRED)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}\
-    -fno-omit-frame-pointer\
-    -lgtest\
-    -lgtest_main \
-    -lpthread \
-    ")
+    if(${BUILD_BENCHMARKS})
+        set(CMAKE_BUILD_TYPE Release)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}\
+            -fno-omit-frame-pointer\
+            -lbenchmark \
+            ")
+        add_executable(benchmarks benchmarks/benchmarks.cpp src/TotalGeneralizedVariation.cpp src/TotalGeneralizedVariation.hpp src/MathRoutine.hpp  src/GPUBasedTotalGeneralizedVariation.cpp src/GPUBasedTotalGeneralizedVariation.hpp
+                src/cl/epsilon.h src/cl/gradient.h src/cl/copy.h src/cl/mulMatrixOnConstant.h src/cl/project.h src/cl/sumOfMatrix.h src/cl/transpondedGradient.h src/cl/transpondedEpsilon.h src/cl/calculateHist.h
+                src/cl/prox.h src/cl/clear.h src/cl/anorm.h src/commonKernels.hpp)
+        target_link_libraries(benchmarks ${GBENCHMARK_LIBRARIES} pthread libclew libgpu libutils libstbimages stdc++fs)
+    else()
+        find_package(GTest REQUIRED)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}\
+        -fno-omit-frame-pointer\
+        -lgtest\
+        -lgtest_main \
+        -lpthread \
+        ")
 
-    include_directories(${GTEST_INCLUDE_DIRS})
-    add_executable(runUnitTests tests/tests.cpp src/TotalGeneralizedVariation.cpp src/GPUBasedTotalGeneralizedVariation.cpp src/GPUBasedTotalGeneralizedVariation.hpp src/TotalGeneralizedVariation.hpp src/MathRoutine.hpp src/cl/epsilon.h src/cl/gradient.h src/cl/copy.h src/cl/mulMatrixOnConstant.h src/cl/project.h src/cl/sumOfMatrix.h src/cl/transpondedGradient.h src/cl/transpondedEpsilon.h src/cl/calculateHist.h
-            src/cl/prox.h src/cl/sqrt.h  src/cl/anorm.h  src/commonKernels.hpp)
-    target_link_libraries(runUnitTests ${GTEST_LIBRARIES} pthread libclew libgpu libutils libstbimages stdc++fs)
+
+
+        include_directories(${GTEST_INCLUDE_DIRS})
+        add_executable(runUnitTests tests/tests.cpp src/TotalGeneralizedVariation.cpp src/GPUBasedTotalGeneralizedVariation.cpp src/GPUBasedTotalGeneralizedVariation.hpp src/TotalGeneralizedVariation.hpp src/MathRoutine.hpp src/cl/epsilon.h src/cl/gradient.h src/cl/copy.h src/cl/mulMatrixOnConstant.h src/cl/project.h src/cl/sumOfMatrix.h src/cl/transpondedGradient.h src/cl/transpondedEpsilon.h src/cl/calculateHist.h
+                src/cl/prox.h src/cl/sqrt.h  src/cl/anorm.h  src/commonKernels.hpp)
+        target_link_libraries(runUnitTests ${GTEST_LIBRARIES} pthread libclew libgpu libutils libstbimages stdc++fs)
+    endif()
 endif()
 

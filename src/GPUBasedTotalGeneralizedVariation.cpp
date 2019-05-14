@@ -8,8 +8,10 @@
 
 #define Debug
 
-GPUBasedTGV::GPUBasedTGV(size_t argc, char **argv, size_t amountOfImagesGPU) : amountOfImagesToGPU(amountOfImagesGPU) {
-    device = gpu::chooseGPUDevice(argc, argv);
+GPUBasedTGV::GPUBasedTGV(std::size_t index) : workGroupSize(128) {
+    char **arg = (char **) calloc(2, sizeof(char *));
+    arg[1] = (char *) (to_string(index).c_str());
+    device = gpu::chooseGPUDevice(2, arg);
     context.init(device.device_id_opencl);
     context.activate();
 }
@@ -47,7 +49,8 @@ void GPUBasedTGV::initKernels() {
 
 void GPUBasedTGV::init(const std::string &path, size_t amountOfImages) {
     initKernels();
-    auto resultOfLoading = loadImages(path.c_str(), amountOfImages);
+    amountOfImagesToGPU = amountOfImages;
+    auto resultOfLoading = loadImages(path.c_str(), amountOfImagesToGPU);
     loadData(observations, std::get<5>(resultOfLoading));
     loadData(image, std::get<4>(resultOfLoading));
     width = std::get<2>(resultOfLoading);

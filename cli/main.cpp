@@ -51,16 +51,14 @@ void CPU(size_t iterations, const std::string& path, const std::string& resultFi
 }
 
 
-void GPU(int argc, char* index, size_t iterations, size_t amountOfImages, const std::string& path, const std::string& resultFileName) {
+void GPU(size_t index, size_t iterations, size_t amountOfImages, const std::string& path, const std::string& resultFileName) {
     float tau = 1 / (sqrtf(8)) / 4 / 16;
     float lambda_data = 1.0;
     float lambda_tv = 1.0;
     float lambda_tgv = 1.0;
     lambda_tv /= lambda_data;
     lambda_tgv /= lambda_data;
-    char **arg = (char **) calloc(2, sizeof(char *));
-    arg[1] = index;
-    auto worker = GPUBasedTGV(2, arg, amountOfImages);
+    auto worker = GPUBasedTGV(index);
     worker.init(path.c_str(), amountOfImages);
     std::cout << "Reading files from: " << path << std::endl;
     for(size_t i = 0; i < iterations; i++) {
@@ -85,7 +83,7 @@ int main(int argc, char **argv) {
             ("g", "Use GPU")
             ("n", "Amount of iterations", cxxopts::value<size_t>() -> default_value("1000"))
             ("p", "Path to data", cxxopts::value<std::string>()->default_value("data"))
-            ("a", "GPU Device number, if gpu used", cxxopts::value<std::string>()->default_value("0"))
+            ("a", "GPU Device number, if gpu used", cxxopts::value<size_t>()->default_value("0"))
             ("r", "Result files name(ply + png)", cxxopts::value<std::string>()->default_value("result"))
             ("i", "Amount of images from whole data set", cxxopts::value<size_t>()->default_value("10"));
     auto result = options.parse(argc, argv);
@@ -102,7 +100,7 @@ int main(int argc, char **argv) {
     } else {
         std::cout << "Using GPU" << std::endl;
         std::cout << "Amount of iterations: " <<  result["n"].as<size_t>() << std::endl;
-        GPU(argc, (char*)result["a"].as<std::string>().c_str(), result["n"].as<size_t>(), result["i"].as<size_t>(), result["p"].as<std::string>(), result["r"].as<std::string>()); //DOES NOT WORK FOR NOW
+        GPU(result["a"].as<size_t>(), result["n"].as<size_t>(), result["i"].as<size_t>(), result["p"].as<std::string>(), result["r"].as<std::string>()); //DOES NOT WORK FOR NOW
         std::cout << "Result saved as: " <<result["r"].as<std::string>() <<".png and " << result["r"].as<std::string>() << ".ply" << std::endl;
     }
 

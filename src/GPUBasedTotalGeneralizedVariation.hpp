@@ -14,7 +14,7 @@
 
 class GPUBasedTGV {
 public:
-    GPUBasedTGV(size_t argc, char **argv, size_t amountOfImagesGPU);
+    GPUBasedTGV(std::size_t index);
 
     void init(const std::string& path, size_t amountOfImages);
 
