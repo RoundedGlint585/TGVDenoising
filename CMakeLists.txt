@@ -26,7 +26,7 @@ convertIntoHeader(src/cl/sqrt.cl src/cl/sqrt.h sqrt_kernel)
 convertIntoHeader(src/cl/anorm.cl src/cl/anorm.h anorm_kernel)
 
 if(${BUILD_RELEASE})
-    set(CMAKE_BUILD_TYPE Debug)
+    set(CMAKE_BUILD_TYPE Release)
 
 
     add_executable(TGV cli/main.cpp src/TotalGeneralizedVariation.cpp src/TotalGeneralizedVariation.hpp src/MathRoutine.hpp  src/GPUBasedTotalGeneralizedVariation.cpp src/GPUBasedTotalGeneralizedVariation.hpp

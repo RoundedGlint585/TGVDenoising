@@ -16,19 +16,21 @@ class GPUBasedTGV {
 public:
     GPUBasedTGV(std::size_t index);
 
-    void init(const std::string& path, size_t amountOfImages);
+    void init(const std::string &path, size_t amountOfImages);
 
     void iteration(float tau, float lambda_tv, float lambda_tgv, float lambda_data);
 
-    void writeImage(const std::string &name) const ;
+    void writeImage(const std::string &name) const;
 
-    void writePly(const std::string& name) const ;
+    void writePly(const std::string &name) const;
 
-    void writeAsPFM(const std::string& name) const;
+    void writeAsPFM(const std::string &name) const;
+
     std::vector<float> getImage();
 
 private:
-    std::tuple<size_t, size_t, int, int, std::vector<float>, std::vector<float>> loadImages(std::string_view path, size_t amountOfImages);
+    std::tuple<size_t, size_t, int, int, std::vector<float>, std::vector<float>>
+    loadImages(std::string_view path, size_t amountOfImages);
 
     void initKernels();
 
@@ -39,7 +41,6 @@ private:
     std::vector<float> getBuffer(size_t name) const;
 
 
-
     void calculateImageDual(float tau_u, float lambda_tv, float tau, float lambda_data);
 
     void calculateVDual(float tau_v, float lambda_tgv, float lambda_tv);
@@ -48,7 +49,7 @@ private:
 
     void calculateQDual(float tau_q, float lambda_tgv);
 
-    
+
     enum bufIndex {
         image,
         v,

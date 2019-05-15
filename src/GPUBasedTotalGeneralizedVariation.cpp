@@ -6,6 +6,7 @@
 #include <filesystem>
 #include <fstream>
 #include "PFMReader.hpp"
+
 #define Debug
 
 GPUBasedTGV::GPUBasedTGV(std::size_t index) : workGroupSize(128) {
@@ -121,6 +122,7 @@ GPUBasedTGV::loadImages(std::string_view path, size_t amountOfImages) {
     } else {
         std::vector<float> selectedObservation = std::vector(width * height * amountOfImages, 0.f);
         //SELECT IMAGES
+        std::cout << height << " " << width << std::endl;
         for (size_t i = 0; i < height; i++) {
             for (size_t j = 0; j < width; j++) {
                 std::vector<float> allForPixel;
@@ -128,6 +130,27 @@ GPUBasedTGV::loadImages(std::string_view path, size_t amountOfImages) {
                     allForPixel.emplace_back(observations[j + i * width + k * width * height]);
                 }
                 std::sort(allForPixel.begin(), allForPixel.end());
+
+
+                //PREPROCESSING
+                if(fabs(allForPixel[allForPixel.size()-1] + 32767.f) >= 0.01f){
+                    float temp = allForPixel[allForPixel.size()-1] + 32767.f;
+                    for(size_t i = 0; i < allForPixel.size(); i++){
+                        if(fabs(allForPixel[i] + 32767.f) < 0.001f){
+                            allForPixel.erase(allForPixel.begin()+i);
+                            i--;
+                        }
+                    }
+                    size_t index = 0;
+                    size_t forNow = allForPixel.size();
+                    while(allForPixel.size() < totalAmountOfImages){
+                        allForPixel.emplace_back(allForPixel[index%forNow]);
+                        index++;
+                    }
+                    std::sort(allForPixel.begin(), allForPixel.end());
+                }
+
+                ///
                 size_t left = (totalAmountOfImages - amountOfImages) / 2;
                 for (size_t k = 0; k < amountOfImages; k++) {
                     selectedObservation[j + i * width + k * width * height] = allForPixel[k + left];
@@ -397,25 +420,25 @@ void GPUBasedTGV::iteration(float tau, float lambda_tv, float lambda_tgv, float 
                        (unsigned int) memoryBuffers[image].first);
 }
 
-void GPUBasedTGV::writePly(const std::string &name) const{
+void GPUBasedTGV::writePly(const std::string &name) const {
     std::ofstream out(name.c_str());
     out << "ply" << std::endl << "format ascii 1.0" << std::endl;
-    out << "element vertex " << height*width << std::endl;
+    out << "element vertex " << height * width << std::endl;
     out << "property float x" << std::endl << "property float y" << std::endl << "property float z" << std::endl;
-    out << "element face " << ((height-1)*(width-1)*2) << std::endl;
+    out << "element face " << ((height - 1) * (width - 1) * 2) << std::endl;
     out << "property list uint8 int32 vertex_indices" << std::endl << "end_header" << std::endl;
     auto result = getBuffer(image);
-    for(size_t i = 0; i < height; i++){
-        for(size_t j = 0; j < width; j++){
-            out << i << " " << j << " " << (size_t)result[j+i*width] << std::endl;
+    for (size_t i = 0; i < height; i++) {
+        for (size_t j = 0; j < width; j++) {
+            out << i << " " << j << " " << (size_t) result[j + i * width] << std::endl;
         }
     }
-    for(size_t i = 0; i < height-1; i++){
-        for(size_t j = 0; j < width-1; j++){
-            auto a = j + i*width;
-            auto b = j+1 +i*width;
-            auto c = j+width+i*width;
-            auto d  = j + width+1 + i*width;
+    for (size_t i = 0; i < height - 1; i++) {
+        for (size_t j = 0; j < width - 1; j++) {
+            auto a = j + i * width;
+            auto b = j + 1 + i * width;
+            auto c = j + width + i * width;
+            auto d = j + width + 1 + i * width;
             out << "3 " << (int) a << " " << (int) b << " " << (int) c << std::endl;
             out << "3 " << (int) c << " " << (int) b << " " << (int) d << std::endl;
         }

@@ -69,7 +69,7 @@ void GPU(size_t index, size_t iterations, size_t amountOfImages, const std::stri
         worker.iteration(tau, lambda_tv, lambda_tgv, lambda_data);
     }
     std::cout << std::endl;
-    worker.writeImage(resultFileName + ".png");
+    //worker.writeImage(resultFileName + ".png");
     worker.writePly(resultFileName + ".ply");
     worker.writeAsPFM(resultFileName+".pfm");
 }

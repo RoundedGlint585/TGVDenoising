@@ -41,7 +41,7 @@ BENCHMARK_DEFINE_F(GPUBase, Obj)(benchmark::State &state) {
     }
 }
 
-BENCHMARK_REGISTER_F(GPUBase, Obj)->Iterations(50);
+BENCHMARK_REGISTER_F(GPUBase, Obj);
 
 std::vector<mathRoutine::Image> prepareImages(std::string_view path, size_t amountOfImages) {
     std::vector<mathRoutine::Image> result;
@@ -96,7 +96,7 @@ BENCHMARK_DEFINE_F(CPUBase, Obj)(benchmark::State &state) {
     }
 }
 
-BENCHMARK_REGISTER_F(CPUBase, Obj)->Iterations(50);
+BENCHMARK_REGISTER_F(CPUBase, Obj);
 
 
 int main(int argc, char **argv) {
