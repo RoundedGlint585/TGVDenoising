@@ -9,6 +9,8 @@
 #include "../src/TotalGeneralizedVariation.hpp"
 #include "benchmark/benchmark.h"
 
+constexpr size_t iter = 1000;
+
 class GPUBase : public ::benchmark::Fixture {
 public:
     GPUBase() : worker(0) {
@@ -36,12 +38,13 @@ BENCHMARK_DEFINE_F(GPUBase, Obj)(benchmark::State &state) {
     lambda_tv /= lambda_data;
     lambda_tgv /= lambda_data;
     while (state.KeepRunning()) {
-        worker.iteration(tau, lambda_tv, lambda_tgv, lambda_data);
-
+        for(int i = 0; i < iter; i++){
+            worker.iteration(tau, lambda_tv, lambda_tgv, lambda_data);
+        }
     }
 }
 
-BENCHMARK_REGISTER_F(GPUBase, Obj)->Iterations(50);
+BENCHMARK_REGISTER_F(GPUBase, Obj)->Iterations(1);
 
 std::vector<mathRoutine::Image> prepareImages(std::string_view path, size_t amountOfImages) {
     std::vector<mathRoutine::Image> result;
@@ -91,12 +94,13 @@ BENCHMARK_DEFINE_F(CPUBase, Obj)(benchmark::State &state) {
     lambda_tv /= lambda_data;
     lambda_tgv /= lambda_data;
     while (state.KeepRunning()) {
-        worker.iteration(tau, lambda_tv, lambda_tgv, lambda_data);
-
+        for(int i = 0; i < iter; i++){
+            worker.iteration(tau, lambda_tv, lambda_tgv, lambda_data);
+        }
     }
 }
 
-BENCHMARK_REGISTER_F(CPUBase, Obj)->Iterations(50);
+BENCHMARK_REGISTER_F(CPUBase, Obj)->Iterations(1);
 
 
 int main(int argc, char **argv) {

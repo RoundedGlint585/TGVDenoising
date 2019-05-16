@@ -52,7 +52,7 @@ void CPU(size_t iterations, const std::string& path, const std::string& resultFi
 
 
 void GPU(size_t index, size_t iterations, size_t amountOfImages, const std::string& path, const std::string& resultFileName) {
-    float tau = 1 / (sqrtf(8)) / 4 / 16;
+    float tau = 1 / (sqrtf(8))/4;
     float lambda_data = 1.0;
     float lambda_tv = 1.0;
     float lambda_tgv = 1.0;

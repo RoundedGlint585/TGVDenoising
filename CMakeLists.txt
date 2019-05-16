@@ -25,7 +25,7 @@ convertIntoHeader(src/cl/prox.cl src/cl/prox.h prox_kernel)
 convertIntoHeader(src/cl/sqrt.cl src/cl/sqrt.h sqrt_kernel)
 convertIntoHeader(src/cl/anorm.cl src/cl/anorm.h anorm_kernel)
 
-if(!${BUILD_RELEASE})
+if(${BUILD_RELEASE})
     set(CMAKE_BUILD_TYPE Debug)
 
 
