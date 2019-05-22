@@ -26,7 +26,7 @@ convertIntoHeader(src/kernels/calculateHist.cl src/kernels/calculateHist.h calcu
 convertIntoHeader(src/kernels/prox.cl src/kernels/prox.h prox_kernel)
 convertIntoHeader(src/kernels/anorm.cl src/kernels/anorm.h anorm_kernel)
 
-if(${BUILD_RELEASE})
+if (!${BUILD_RELEASE})
     set(CMAKE_BUILD_TYPE Release)
     add_executable(TGV src/cli/main.cpp src/TotalGeneralizedVariation.cpp src/TotalGeneralizedVariation.hpp src/MathRoutine.hpp src/GPUBasedTotalGeneralizedVariation.cpp src/GPUBasedTotalGeneralizedVariation.hpp
             src/kernels/epsilon.h src/kernels/gradient.h src/kernels/copy.h src/kernels/mulMatrixOnConstant.h src/kernels/project.h src/kernels/sumOfMatrix.h src/kernels/transpondedGradient.h src/kernels/transpondedEpsilon.h src/kernels/calculateHist.h

@@ -76,16 +76,12 @@ TEST_F(imageTest, readImageFromFile) {
     ASSERT_FALSE(image == nullptr) << "Image is not loaded";
 
     mathRoutine::Image imageInMatrix = mathRoutine::createImageFromUnsignedCharArray(image, width, height);
-    std::size_t returnedWidth, returnedHeight;
-    unsigned char *result = mathRoutine::getArrayFromImage(&returnedWidth, &returnedHeight, imageInMatrix);
-    ASSERT_EQ(width, returnedWidth);
-    ASSERT_EQ(height, returnedHeight);
+    auto result = mathRoutine::getArrayFromImage<unsigned char>(imageInMatrix);
     for (size_t i = 0; i < height * width; i++) {
         ASSERT_EQ(result[i], image[i]);
     }
 
     stbi_image_free(image);
-    delete[] result;
 }
 
 TEST_F(imageTest, writeAndLoad) {
@@ -97,8 +93,9 @@ TEST_F(imageTest, writeAndLoad) {
                                      STBI_grey);
     ASSERT_FALSE(image == nullptr) << "Image is not loaded";
     mathRoutine::Image imageInMatrix = mathRoutine::createImageFromUnsignedCharArray(image, width, height);
-    std::size_t returnedWidth, returnedHeight;
-    unsigned char *result = mathRoutine::getArrayFromImage(&returnedWidth, &returnedHeight, imageInMatrix);
+    int returnedWidth = imageInMatrix[0].size();
+    int returnedHeight = imageInMatrix.size();
+    auto result = mathRoutine::getArrayFromImage<unsigned char>(imageInMatrix);
     stbi_write_png("result1.png", returnedWidth, returnedHeight, STBI_grey, image, returnedWidth);
     unsigned char *imageLoadedAgain = stbi_load("result1.png",
                                                 &width,
