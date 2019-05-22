@@ -3,12 +3,15 @@
 //
 #pragma once
 
+#include <unordered_map>
+#include <filesystem>
+#include <fstream>
+#include <cstring>
 #include <libutils/misc.h>
 #include <libutils/timer.h>
 #include <libutils/fast_random.h>
 #include <libgpu/context.h>
 #include <libgpu/shared_device_buffer.h>
-#include <unordered_map>
 #include "StbInterfaceProxy.hpp"
 #include "commonKernels.hpp"
 
@@ -16,30 +19,28 @@ class GPUBasedTGV {
 public:
     GPUBasedTGV(std::size_t index);
 
-    void init(const std::string &path, size_t amountOfImages);
+    void init(size_t amountOfImages, size_t width, size_t height, const std::vector<float> &image,
+              const std::vector<float> &observations);
+
+    void init(const std::vector<float> &observations, size_t height, size_t width);
 
     void iteration(float tau, float lambda_tv, float lambda_tgv, float lambda_data);
 
-    void writeImage(const std::string &name) const;
+    std::vector<float> getImage() const;
 
-    void writePly(const std::string &name) const;
+    size_t getHeight() const;
 
-    void writeAsPFM(const std::string &name) const;
-
-    std::vector<float> getImage();
+    size_t getWidth() const;
 
 private:
-    std::tuple<size_t, size_t, int, int, std::vector<float>, std::vector<float>>
-    loadImages(std::string_view path, size_t amountOfImages);
 
     void initKernels();
-
-    void loadData(size_t name, const std::vector<float> &data);
 
     void reserveDataN(size_t name, size_t amount);
 
     std::vector<float> getBuffer(size_t name) const;
 
+    void loadData(size_t name, const std::vector<float> &data);
 
     void calculateImageDual(float tau_u, float lambda_tv, float tau, float lambda_data);
 
@@ -74,7 +75,6 @@ private:
     size_t width = 0;
     size_t height = 0;
     size_t amountOfObservation = 0;
-    size_t amountOfImagesToGPU = 0;
     unsigned int workGroupSize;
     unsigned int globalWorkSize;
 

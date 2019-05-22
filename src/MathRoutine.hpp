@@ -8,9 +8,7 @@
 #include <vector>
 #include <array>
 #include <cmath>
-#include <iostream>
 #include "StbInterfaceProxy.hpp"
-#include <fstream>
 
 namespace mathRoutine {
     constexpr float eps = 0.001;
@@ -18,11 +16,11 @@ namespace mathRoutine {
     using Gradient = std::vector<std::vector<std::array<float, 2>>>;
     using Epsilon = std::vector<std::vector<std::array<float, 4>>>;
 
-    static Image createImageFromUnsignedCharArray(const unsigned char *image, size_t width, size_t height);
+    template<typename T>
+    static Image createImageFromUnsignedCharArray(const T *image, size_t width, size_t height);
 
-    static unsigned char *getArrayFromImage(std::size_t *width, std::size_t *height, const Image &image);
-
-    static void writeImage(mathRoutine::Image result, std::string name);
+    template<typename T>
+    static std::vector<T> getArrayFromImage(const Image &image);
 
     static Gradient calculateGradient(const Image &image);
 
@@ -66,13 +64,9 @@ namespace mathRoutine {
     template<typename Matrix>
     static Matrix operator*(float r, const Matrix &matrix1);
 
-    void writeImage(mathRoutine::Image result, std::string name) {
-        size_t width, height;
-        unsigned char *image = mathRoutine::getArrayFromImage(&width, &height, result);
-        stbi_write_png(name.c_str(), result[0].size(), result.size(), 1, image, 1 * result.size());
-    }
 
-    static Image createImageFromUnsignedCharArray(const unsigned char *image, size_t width, size_t height) {
+    template<typename T>
+    static Image createImageFromUnsignedCharArray(const T *image, size_t width, size_t height) {
         Image result(height, std::vector<float>(width, 0));
         for (size_t i = 0; i < height; i++) {
             for (size_t j = 0; j < width; j++) {
@@ -82,13 +76,12 @@ namespace mathRoutine {
         return result;
     }
 
-    static unsigned char *getArrayFromImage(std::size_t *width, std::size_t *height, const Image &image) {
-        unsigned char *result = new unsigned char[image.size() * image[0].size()];
-        *height = image.size();
-        *width = image[0].size();
+    template<typename T>
+    static std::vector<T> getArrayFromImage(const Image &image) {
+        std::vector<T> result(image.size() * image[0].size());
         for (size_t i = 0; i < image.size(); i++) {
             for (size_t j = 0; j < image[0].size(); j++) {
-                result[j + image[0].size() * i] = (unsigned char) image[i][j];
+                result[j + image[0].size() * i] = static_cast<T>(image[i][j]);
             }
         }
         return result;
@@ -203,10 +196,10 @@ namespace mathRoutine {
         size_t height = matrix.size();
         size_t width = matrix[0].size();
         Image normed = anorm(result);
-        for(auto& i: normed){
-            for(auto& j: i){
+        for (auto &i: normed) {
+            for (auto &j: i) {
                 j /= r;
-                if(j < eps){
+                if (j < eps) {
                     j = 1.f;
                 }
             }
@@ -221,7 +214,6 @@ namespace mathRoutine {
         return result;
     }
 
-
     static Image sumOfImage(const Image &image1, const Image &image2) {
         Image result = image1;
         size_t height = image1.size();
@@ -233,6 +225,7 @@ namespace mathRoutine {
         }
         return result;
     }
+
 
     static Image mulImageOnConstant(const Image &image, float k) {
         Image result = image;

@@ -3,9 +3,7 @@
 //
 
 #include "TotalGeneralizedVariation.hpp"
-#include <fstream>
 
-#define Debug
 
 TotalGeneralizedVariation::TotalGeneralizedVariation(const std::vector<TotalGeneralizedVariation::Image> &images)
         : m_images(images), m_result(m_images[0]), m_width(m_result[0].size()), m_height(m_result.size()) {

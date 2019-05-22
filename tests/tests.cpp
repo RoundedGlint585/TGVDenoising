@@ -209,7 +209,6 @@ protected:
 
         using namespace std::filesystem;
         for (auto &p: directory_iterator(path)) {
-            std::cout << "loading image: " << p << std::endl;
             std::string name = p.path();
             int width, height, channels;
             unsigned char *loadedImage = stbi_load(name.c_str(),
@@ -230,7 +229,6 @@ protected:
         int channels;
         std::vector<float> observations;
         for (auto &p: directory_iterator(path)) {
-            std::cout << "loading image: " << p << std::endl;
             std::string name = p.path();
             unsigned char *bytes = stbi_load(name.c_str(),
                                              &width,

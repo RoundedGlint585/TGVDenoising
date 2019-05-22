@@ -42,25 +42,25 @@ bool Mutex::tryLock () const
 
 Mutex::Mutex ()
 {
-	int error = ::pthread_mutex_init(&_mutex, 0);
+    [[maybe_unused]]int error = ::pthread_mutex_init(&_mutex, 0);
 	assert(error == 0);
 }
 
 Mutex::~Mutex ()
 {
-	int error = ::pthread_mutex_destroy(&_mutex);
+    [[maybe_unused]]int error = ::pthread_mutex_destroy(&_mutex);
 	assert(error == 0);
 }
 
 void Mutex::lock() const
 {
-	int error = ::pthread_mutex_lock(&_mutex);
+    [[maybe_unused]]int error = ::pthread_mutex_lock(&_mutex);
 	assert(error == 0);
 }
 
 void Mutex::unlock() const
 {
-	int error = ::pthread_mutex_unlock(&_mutex);
+    [[maybe_unused]]int error = ::pthread_mutex_unlock(&_mutex);
 	assert(error == 0);
 }
 

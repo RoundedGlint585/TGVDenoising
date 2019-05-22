@@ -4,17 +4,17 @@
 
 #ifndef TGV_COMMONKERNELS_HPP
 #define TGV_COMMONKERNELS_HPP
-#include "cl/epsilon.h"
-#include "cl/gradient.h"
-#include "cl/copy.h"
-#include "cl/mulMatrixOnConstant.h"
-#include "cl/project.h"
-#include "cl/sumOfMatrix.h"
-#include "cl/transpondedGradient.h"
-#include "cl/transpondedEpsilon.h"
-#include "cl/calculateHist.h"
-#include "cl/prox.h"
-#include "cl/clear.h"
-#include "cl/anorm.h"
-#include "cl/sqrt.h"
+
+#include "kernels/epsilon.h"
+#include "kernels/gradient.h"
+#include "kernels/copy.h"
+#include "kernels/mulMatrixOnConstant.h"
+#include "kernels/project.h"
+#include "kernels/sumOfMatrix.h"
+#include "kernels/transpondedGradient.h"
+#include "kernels/transpondedEpsilon.h"
+#include "kernels/calculateHist.h"
+#include "kernels/prox.h"
+#include "kernels/anorm.h"
+
 #endif //TGV_COMMONKERNELS_HPP

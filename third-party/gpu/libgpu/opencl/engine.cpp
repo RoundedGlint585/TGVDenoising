@@ -421,7 +421,7 @@ const VersionedBinary* ProgramBinaries::getBinary(const std::shared_ptr<OpenCLEn
 		if (binary->openclMajorVersion() > cl->deviceInfo().opencl_major_version)
 			continue;
 
-//		if (binary->openclMajorVersion() == cl->deviceInfo().opencl_major_version && binary->openclMinorVersion() > cl->deviceInfo().opencl_minor_version)
+//		if (binary->openclMajorVersion() == kernels->deviceInfo().opencl_major_version && binary->openclMinorVersion() > kernels->deviceInfo().opencl_minor_version)
 //			continue;
 
 		return binary;
@@ -580,7 +580,7 @@ OpenCLKernel *KernelSource::getKernel(const std::shared_ptr<OpenCLEngine> &cl, b
 				std::cout << "Building kernels for " << cl->deviceName() << "... " << std::endl;
 			}
 //			else {
-//				std::cout << "Building kernel " << program_->programName() << " for " << cl->deviceName() << "... " << std::endl;
+//				std::cout << "Building kernel " << program_->programName() << " for " << kernels->deviceName() << "... " << std::endl;
 //			}
 		}
 
