@@ -43,6 +43,6 @@ else()
     ")
     include_directories(${GTEST_INCLUDE_DIRS})
     add_executable(runUnitTests tests/tests.cpp src/TotalGeneralizedVariation.cpp src/GPUBasedTotalGeneralizedVariation.cpp src/GPUBasedTotalGeneralizedVariation.hpp src/TotalGeneralizedVariation.hpp src/MathRoutine.hpp src/kernels/epsilon.h src/kernels/gradient.h src/kernels/copy.h src/kernels/mulMatrixOnConstant.h src/kernels/project.h src/kernels/sumOfMatrix.h src/kernels/transpondedGradient.h src/kernels/transpondedEpsilon.h src/kernels/calculateHist.h
-            src/kernels/prox.h src/kernels/sqrt.h src/kernels/anorm.h src/commonKernels.hpp)
+            src/kernels/prox.h src/kernels/anorm.h src/commonKernels.hpp)
     target_link_libraries(runUnitTests ${GTEST_LIBRARIES} pthread libclew libgpu libutils libstbimages stdc++fs)
 endif()
