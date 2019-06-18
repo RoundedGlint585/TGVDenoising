@@ -48,6 +48,7 @@ Current solution based on command line interface with keys.
 | -i \<Num\>           | amount of images for GPU                | 10            |
 | -scaleX \<Num\>      | scale for X axis for Ply file           | 10            |
 | -scaleY \<Num\>      | scale for Y axis for Ply file           | 10            |    
+
 So just start program with these keys
 
 #### File format
