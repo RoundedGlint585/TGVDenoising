@@ -35,7 +35,7 @@ Compile with Cmake flag -D BUILD_RELEASE:BOOL=false
 
 ## How to use
 
-Current solution based on command line interface with keys
+Current solution based on command line interface with keys. 
 
 | Key                  | Purpose                                 | Default Value |
 | :------------------- | :-------------------------------------- | :------------ |
@@ -49,6 +49,11 @@ Current solution based on command line interface with keys
 | -scaleX \<Num\>      | scale for X axis for Ply file           | 10            |
 | -scaleY \<Num\>      | scale for Y axis for Ply file           | 10            |    
 So just start program with these keys
+
+#### File format
+
+Program works with PFM, so perhaps you will have to convert files                 
+
 
 ### Examples
 
