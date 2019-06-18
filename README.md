@@ -3,10 +3,6 @@
 
 This code repository is an implementation of the total generalized variation method based on this [paper](https://pdfs.semanticscholar.org/3cdf/b982d5f5c926f9ee257ee7d391ff716e08e6.pdf?_ga=2.99932824.785502720.1554466187-1112687837.1554466187)
 
-## Getting Started
-
-To add
-
 ## Platforms ##
 
   * Linux (Tested)
@@ -50,7 +46,8 @@ Current solution based on command line interface with keys
 | -a \<Num\>           | Index of gpu if there are a more than 1 | 0             |
 | -r \<File name\>     | Name of the result file                 | result        |
 | -i \<Num\>           | amount of images for GPU                | 10            |
-   
+| -scaleX \<Num\>      | scale for X axis for Ply file           | 10            |
+| -scaleY \<Num\>      | scale for Y axis for Ply file           | 10            |    
 So just start program with these keys
 
 ### Examples
@@ -61,7 +58,7 @@ So just start program with these keys
 
 ## Authors
 
-* **Daniil Smolyakov** - *Initial work and CPU based code* - [DanonOfficial](https://github.com/DanonOfficial)
+* **Daniil Smolyakov** - *Initial work and CPU/GPU based code* - [DanonOfficial](https://github.com/DanonOfficial)
 
 
 ## License

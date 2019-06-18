@@ -16,5 +16,5 @@
 #include "kernels/calculateHist.h"
 #include "kernels/prox.h"
 #include "kernels/anorm.h"
-
+#include "kernels/energy.h"
 #endif //TGV_COMMONKERNELS_HPP

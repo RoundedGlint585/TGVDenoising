@@ -99,7 +99,7 @@ prepareImagesGPU(std::string_view path, size_t amountOfImages) {
 
 }
 
-void CPU(size_t iterations, const std::string &path, const std::string &resultFileName) {
+void CPU(size_t iterations, float scaleX, float scaleY, const std::string &path, const std::string &resultFileName) {
     std::vector<mathRoutine::Image> images = prepareImagesCPU(path.c_str(), 10);
     TotalGeneralizedVariation variation(std::move(images));
     float tau = 1 / (sqrtf(8)) / 4 / 8;
@@ -120,11 +120,11 @@ void CPU(size_t iterations, const std::string &path, const std::string &resultFi
     auto linedUp = mathRoutine::getArrayFromImage<float>(result);
     writeImage(result, resultFileName + ".png");
     writePFM(resultFileName + ".png", result.size(), result[0].size(), linedUp);
-    writePly(resultFileName + ".ply", linedUp, result.size(), result[0].size(), 1.f, 1.f);
+    writePly(resultFileName + ".ply", linedUp, result.size(), result[0].size(), scaleX, scaleY);
 }
 
 
-void GPU(size_t index, size_t iterations, size_t amountOfImages, const std::string &path,
+void GPU(size_t index, size_t iterations, size_t amountOfImages, float scaleX, float scaleY, const std::string &path,
          const std::string &resultFileName) {
     float tau = 1 / (sqrtf(8)) / 4 / 8;
     float lambda_data = 1.0;
@@ -152,7 +152,7 @@ void GPU(size_t index, size_t iterations, size_t amountOfImages, const std::stri
     auto result = worker.getImage();
     writeImage(resultFileName + ".png", result, worker.getHeight(), worker.getWidth());
     writePFM(resultFileName + ".png", worker.getHeight(), worker.getWidth(), result);
-    writePly(resultFileName + ".ply", result, worker.getHeight(), worker.getWidth(), 1.f, 1.f);
+    writePly(resultFileName + ".ply", result, worker.getHeight(), worker.getWidth(), scaleX, scaleY);
 }
 
 
@@ -178,11 +178,14 @@ int main(int argc, char **argv) {
     if (result["c"].as<bool>()) {
         std::cout << "Using CPU" << std::endl;
         std::cout << "Amount of iterations: " << result["n"].as<size_t>() << std::endl;
-        CPU(result["n"].as<size_t>(), result["p"].as<std::string>(), result["r"].as<std::string>());
+        CPU(result["n"].as<size_t>(), result["scaleX"].as<float>(), result["scaleY"].as<float>(),
+            result["p"].as<std::string>(), result["r"].as<std::string>());
     } else {
         std::cout << "Using GPU" << std::endl;
         std::cout << "Amount of iterations: " << result["n"].as<size_t>() << std::endl;
         GPU(result["a"].as<std::size_t>(), result["n"].as<size_t>(), result["i"].as<size_t>(),
+            result["scaleX"].as<float>(),
+            result["scaleY"].as<float>(),
             result["p"].as<std::string>(), result["r"].as<std::string>()); //DOES NOT WORK FOR NOW
         std::cout << "Result saved as: " << result["r"].as<std::string>() << ".png and "
                   << result["r"].as<std::string>() << ".ply" << std::endl;

@@ -7,7 +7,6 @@ set(BUILD_BENCHMARKS true CACHE BOOL "BUILD_BENCHMARKS")
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}\
     -fno-omit-frame-pointer\
-    -Wall\
 ")
 add_subdirectory(third-party)
 
@@ -26,7 +25,8 @@ convertIntoHeader(src/kernels/calculateHist.cl src/kernels/calculateHist.h calcu
 convertIntoHeader(src/kernels/prox.cl src/kernels/prox.h prox_kernel)
 convertIntoHeader(src/kernels/anorm.cl src/kernels/anorm.h anorm_kernel)
 
-if (!${BUILD_RELEASE})
+
+if (${BUILD_RELEASE})
     set(CMAKE_BUILD_TYPE Release)
     add_executable(TGV src/cli/main.cpp src/TotalGeneralizedVariation.cpp src/TotalGeneralizedVariation.hpp src/MathRoutine.hpp src/GPUBasedTotalGeneralizedVariation.cpp src/GPUBasedTotalGeneralizedVariation.hpp
             src/kernels/epsilon.h src/kernels/gradient.h src/kernels/copy.h src/kernels/mulMatrixOnConstant.h src/kernels/project.h src/kernels/sumOfMatrix.h src/kernels/transpondedGradient.h src/kernels/transpondedEpsilon.h src/kernels/calculateHist.h
@@ -41,8 +41,9 @@ else()
     -lgtest_main \
     -lpthread \
     ")
+    convertIntoHeader(src/kernels/energy.cl src/kernels/energy.h energy_kernel)
     include_directories(${GTEST_INCLUDE_DIRS})
     add_executable(runUnitTests tests/tests.cpp src/TotalGeneralizedVariation.cpp src/GPUBasedTotalGeneralizedVariation.cpp src/GPUBasedTotalGeneralizedVariation.hpp src/TotalGeneralizedVariation.hpp src/MathRoutine.hpp src/kernels/epsilon.h src/kernels/gradient.h src/kernels/copy.h src/kernels/mulMatrixOnConstant.h src/kernels/project.h src/kernels/sumOfMatrix.h src/kernels/transpondedGradient.h src/kernels/transpondedEpsilon.h src/kernels/calculateHist.h
-            src/kernels/prox.h src/kernels/anorm.h src/commonKernels.hpp)
+            src/kernels/prox.h src/kernels/anorm.h src/commonKernels.hpp src/kernels/energy.h)
     target_link_libraries(runUnitTests ${GTEST_LIBRARIES} pthread libclew libgpu libutils libstbimages stdc++fs)
 endif()
