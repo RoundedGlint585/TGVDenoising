@@ -5,8 +5,6 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 
 #include <filesystem>
-#include <vector>
-#include <fstream>
 #include <gtest/gtest.h>
 #include <libutils/misc.h>
 #include <libutils/timer.h>
@@ -255,7 +253,9 @@ protected:
                                 1, 1, 1, 200, 1,
                                 1, 196, 200, 3, 1};
 
-
+    unsigned int workGroupSize = 128;
+    unsigned int globalWorkSize = (image.size() + workGroupSize - 1) / workGroupSize * workGroupSize;
+    gpu::WorkSize workSize = gpu::WorkSize(workGroupSize, globalWorkSize);
     ocl::Kernel tgvGradientKernel = ocl::Kernel(gradient_kernel, gradient_kernel_length, "gradient");
     ocl::Kernel tgvEpsilonKernel = ocl::Kernel(epsilon_kernel, epsilon_kernel_length, "epsilon");
     ocl::Kernel tgvTranspondedGradientKernel = ocl::Kernel(transponded_gradient_kernel,
@@ -265,7 +265,6 @@ protected:
     ocl::Kernel tgvProjectedKernel = ocl::Kernel(project_kernel, project_kernel_length, "project");
     ocl::Kernel tgvCalculateHist = ocl::Kernel(calculate_hist_kernel, calculate_hist_kernel_length, "calculateHist");
     ocl::Kernel tgvAnormKernel = ocl::Kernel(anorm_kernel, anorm_kernel_length, "anorm");
-    ocl::Kernel EnergyKernel = ocl::Kernel(energy_kernel, energy_kernel_length, "solve");
     gpu::gpu_mem_32f imageBuf;
 
 };
